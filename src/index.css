@@ -1,0 +1,235 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Official AWS Console Light Colors */
+  --bg-page: #f2f3f3;
+  --bg-content: #ffffff;
+  
+  --text-primary: #16191f;
+  --text-secondary: #545b64;
+  --text-link: #0073bb;
+  --text-link-hover: #005a93;
+  
+  --border-light: #eaeded;
+  --border-medium: #aab7b8;
+  --border-strong: #687078;
+  --border-focus: #0073bb;
+  
+  --aws-orange: #ff9900;
+  
+  /* Selected Box Styles */
+  --bg-selected: #f1f8fa; /* Light blue tint for selected radio boxes */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+/* Base Panel */
+.aws-panel {
+  background: var(--bg-content);
+  border: 1px solid var(--border-light);
+  padding: 24px;
+}
+
+/* Layout */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.console-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 20px 32px;
+}
+
+/* AWS Forms & Inputs */
+.aws-input {
+  background-color: var(--bg-content);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  padding: 6px 12px;
+  border-radius: 2px;
+  font-family: inherit;
+  font-size: 14px;
+  width: 100%;
+}
+
+.aws-input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 1px var(--border-focus);
+}
+
+.aws-label {
+  display: block;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.aws-hint {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.aws-info-link {
+  color: var(--text-link);
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 400;
+}
+
+.aws-info-link:hover {
+  text-decoration: underline;
+  color: var(--text-link-hover);
+}
+
+/* AWS Radio Box */
+.aws-radio-box {
+  border: 1px solid var(--border-medium);
+  border-radius: 2px;
+  padding: 16px;
+  background-color: var(--bg-content);
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.aws-radio-box:hover {
+  border-color: var(--border-strong);
+}
+
+.aws-radio-box.selected {
+  border-color: var(--border-focus);
+  background-color: var(--bg-selected);
+  box-shadow: inset 0 0 0 1px var(--border-focus);
+}
+
+.aws-radio-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+/* Custom Radio Input */
+.aws-radio-input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  margin-top: 2px;
+  cursor: pointer;
+  position: relative;
+  outline: none;
+}
+
+.aws-radio-input:checked {
+  border-color: var(--border-focus);
+}
+
+.aws-radio-input:checked::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 8px;
+  height: 8px;
+  background-color: var(--border-focus);
+  border-radius: 50%;
+}
+
+/* Buttons */
+.aws-btn-primary {
+  background-color: var(--aws-orange);
+  color: #111;
+  font-weight: 700;
+  font-size: 14px;
+  border: 1px solid #c97900;
+  border-radius: 2px;
+  padding: 6px 16px;
+  cursor: pointer;
+}
+.aws-btn-primary:hover {
+  background-color: #ec8e00;
+}
+
+/* Quest Highlight (Keeping some gamification subtly) */
+.success-glow {
+  border-left: 4px solid #1d8102 !important;
+}
+
+/* ── 게임 애니메이션 ── */
+@keyframes toast-slide {
+  0%   { transform: translateX(115%); opacity: 0; }
+  10%  { transform: translateX(0);    opacity: 1; }
+  78%  { transform: translateX(0);    opacity: 1; }
+  100% { transform: translateX(115%); opacity: 0; }
+}
+
+@keyframes billing-tick {
+  0%   { transform: scale(1);    color: inherit; }
+  30%  { transform: scale(1.25); color: #fc8181; }
+  60%  { transform: scale(1.1);  color: #fc8181; }
+  100% { transform: scale(1);    color: inherit; }
+}
+
+@keyframes step-clear-pop {
+  0%   { transform: scale(0.85); opacity: 0; }
+  60%  { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1);    opacity: 1; }
+}
+
+@keyframes stage-clear-in {
+  0%   { transform: scale(0.8) translateY(24px); opacity: 0; }
+  65%  { transform: scale(1.02) translateY(-4px); opacity: 1; }
+  100% { transform: scale(1) translateY(0);       opacity: 1; }
+}
+
+.billing-tick {
+  display: inline-block;
+  animation: billing-tick 0.5s ease-out forwards;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-page);
+}
+::-webkit-scrollbar-thumb {
+  background: #c8ced3;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #aab7b8;
+}
