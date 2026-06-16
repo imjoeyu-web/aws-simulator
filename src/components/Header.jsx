@@ -75,8 +75,18 @@ export default function Header({ currentService, onServiceSelect, questState }) 
   const handleRegionSelect = (code) => {
     setSelectedRegion(code);
     setRegionOpen(false);
-    if (questState?.currentStep?.id?.includes('region') && code === 'ap-northeast-2') {
-      questState.completeCurrentStep();
+
+    const isSeoul = code === 'ap-northeast-2';
+
+    // 리전 설정 스텝 완료 → 서울이든 아니든 완료됨
+    const regionStep = questState?.steps?.find(s => s.id?.includes('region'));
+    if (regionStep && !questState?.completedSteps?.includes(regionStep.id)) {
+      questState.completeStep?.(regionStep.id);
+    }
+
+    // 서울 아닌 리전 선택 시 페널티
+    if (!isSeoul) {
+      questState.triggerMistake?.('wrong_region');
     }
   };
 

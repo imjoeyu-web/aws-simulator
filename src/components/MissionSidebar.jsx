@@ -1,15 +1,6 @@
 import { CheckCircle2, Circle, ChevronRight } from 'lucide-react';
 import SajangCharacter from './SajangCharacter';
 
-const SERVICE_COSTS = {
-  cloud9:   0.10,
-  s3:       0.023,
-  terminal: 0.004,
-  ec2:      0.52,
-  rds:      1.75,
-  lambda:   0.0002,
-};
-
 const MOOD_CONFIG = {
   worried:    { label: '...이게 맞나?',      color: '#e53e3e' },
   determined: { label: '해보자고.',           color: '#d45b07' },
@@ -17,33 +8,24 @@ const MOOD_CONFIG = {
   ecstatic:   { label: '만두가게 살았다!!!', color: '#1d8102' },
 };
 
-const COST_REACTIONS = [
-  { max: 1,    emoji: '😤', text: '아직 괜찮아' },
-  { max: 5,    emoji: '🤔', text: '뭐 이 정도는...' },
-  { max: 15,   emoji: '😰', text: '카드값이...' },
-  { max: 30,   emoji: '😱', text: '파산 직전!!!' },
-  { max: Infinity, emoji: '💀', text: '가게 문 닫았습니다' },
-];
-
-function getMood(completedSteps, totalSteps) {
-  if (totalSteps === 0) return 'worried';
-  const ratio = completedSteps / totalSteps;
-  if (ratio >= 0.8) return 'ecstatic';
-  if (ratio >= 0.5) return 'happy';
-  if (ratio >= 0.2) return 'determined';
-  return 'worried';
+function getCreditColor(credits) {
+  if (credits >= 60) return '#1d8102';
+  if (credits >= 30) return '#d45b07';
+  return '#e53e3e';
 }
 
-export default function MissionSidebar({ steps, currentStepIndex, completedSteps }) {
-  const mood = getMood(completedSteps.length, steps.length);
-  const moodCfg = MOOD_CONFIG[mood];
+function getCreditLabel(credits) {
+  if (credits >= 80) return '절약왕';
+  if (credits >= 60) return '괜찮아요';
+  if (credits >= 30) return '조금 위험해요';
+  if (credits > 0)   return '파산 직전!!!';
+  return '파산했습니다';
+}
 
-  const totalCost = completedSteps.reduce((sum, stepId) => {
-    const step = steps.find(s => s.id === stepId);
-    return sum + (SERVICE_COSTS[step?.service] ?? 0.05);
-  }, 0);
-
-  const costReaction = COST_REACTIONS.find(r => totalCost < r.max);
+export default function MissionSidebar({ steps, currentStepIndex, completedSteps, credits = 100, mood = 'worried' }) {
+  const moodCfg = MOOD_CONFIG[mood] ?? MOOD_CONFIG.worried;
+  const creditColor = getCreditColor(credits);
+  const creditLabel = getCreditLabel(credits);
 
   return (
     <div style={{
@@ -52,7 +34,7 @@ export default function MissionSidebar({ steps, currentStepIndex, completedSteps
       borderRight: '1px solid var(--border-light)',
       display: 'flex',
       flexDirection: 'column',
-      background: '#fafafa'
+      background: '#fafafa',
     }}>
 
       {/* ── 아저씨 + 말풍선 ── */}
@@ -64,12 +46,10 @@ export default function MissionSidebar({ steps, currentStepIndex, completedSteps
         alignItems: 'flex-end',
         gap: '12px',
       }}>
-        {/* 캐릭터 */}
         <div style={{ flexShrink: 0 }}>
           <SajangCharacter size={72} mood={mood} />
         </div>
 
-        {/* 말풍선 + 진행도 */}
         <div style={{ flex: 1, paddingBottom: '4px' }}>
           {/* 말풍선 */}
           <div style={{
@@ -81,7 +61,6 @@ export default function MissionSidebar({ steps, currentStepIndex, completedSteps
             fontWeight: 700,
             marginBottom: '10px',
             display: 'inline-block',
-            position: 'relative',
           }}>
             {moodCfg.label}
           </div>
@@ -106,33 +85,44 @@ export default function MissionSidebar({ steps, currentStepIndex, completedSteps
         </div>
       </div>
 
-      {/* ── AWS 청구액 위젯 ── */}
+      {/* ── 크레딧 게이지 ── */}
       <div style={{
         padding: '10px 16px',
         borderBottom: '1px solid var(--border-light)',
-        background: totalCost > 15 ? '#fff5f5' : '#fff',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '8px',
+        background: credits <= 25 ? '#fff5f5' : '#fff',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '15px' }}>{costReaction.emoji}</span>
-          <div>
-            <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.3px' }}>이번 달 AWS 청구액</div>
-            <div style={{ fontSize: '10px', color: totalCost > 15 ? '#e53e3e' : 'var(--text-secondary)' }}>{costReaction.text}</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '13px' }}>💰</span>
+            <div>
+              <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.3px' }}>
+                남은 크레딧
+              </div>
+              <div style={{ fontSize: '10px', color: creditColor, fontWeight: 600 }}>{creditLabel}</div>
+            </div>
+          </div>
+          <div
+            key={credits}
+            className="billing-tick"
+            style={{
+              fontSize: '15px',
+              fontWeight: 800,
+              color: creditColor,
+              fontFamily: 'monospace',
+            }}
+          >
+            ${credits}
           </div>
         </div>
-        <div
-          key={totalCost.toFixed(3)}
-          className="billing-tick"
-          style={{
-            fontSize: '15px', fontWeight: 800,
-            color: totalCost > 30 ? '#e53e3e' : totalCost > 15 ? '#d45b07' : '#1d8102',
-            fontFamily: 'monospace',
-          }}
-        >
-          ${totalCost.toFixed(2)}
+        {/* 게이지 바 */}
+        <div style={{ width: '100%', height: '7px', background: '#e9ecef', borderRadius: '4px', overflow: 'hidden' }}>
+          <div style={{
+            height: '100%',
+            width: `${Math.max(0, Math.min(100, credits))}%`,
+            background: creditColor,
+            borderRadius: '4px',
+            transition: 'width 0.5s ease-out, background 0.3s',
+          }} />
         </div>
       </div>
 

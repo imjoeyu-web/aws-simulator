@@ -1,181 +1,96 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
-import SajangCharacter from './SajangCharacter';
 
 export default function CloudOnboarding({ onDone }) {
   return (
-    <div style={{ minHeight: '100vh', background: '#16191f', color: '#fff', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ position: 'absolute', inset: 0, background: '#7c4daa', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
 
-      {/* 히어로 */}
-      <div style={{
-        background: 'linear-gradient(160deg, #1a2332 0%, #0d1b2a 60%, #16191f 100%)',
-        padding: '48px 40px 40px',
-        borderBottom: '1px solid #2d3748',
-      }}>
-        <div style={{ maxWidth: '820px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '40px' }}>
-          {/* 왼쪽: 텍스트 */}
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '3px', color: '#f0b429', textTransform: 'uppercase', marginBottom: '16px' }}>
-              고향만두 아저씨 살아남기
-            </div>
-            <h1 style={{ fontSize: '36px', fontWeight: 800, lineHeight: 1.25, marginBottom: '16px' }}>
-              만두만으론<br />살아남을 수 없다…
-            </h1>
-            <p style={{ fontSize: '14px', color: '#a0aec0', lineHeight: 1.9, margin: 0 }}>
-              대한민국 자영업의 험난함을 몸소 깨달은<br />
-              고향만두 아저씨.<br />
-              결국 <strong style={{ color: '#f0b429' }}>클라우드</strong>를 배우기로 결심했다. <span style={{ color: '#718096' }}>ㅇㅁㅇ</span>
-            </p>
-          </div>
+      {/* 배경 이미지 */}
+      <img src="/bgi_home2.png" alt="홈 배경" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} />
 
-          {/* 오른쪽: 캐릭터 */}
-          <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-            <SajangCharacter size={190} />
-          </div>
-        </div>
-      </div>
+      {/* 콘텐츠 — 오른쪽 반투명 패널 위에 */}
+      <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', padding: '40px 3% 40px 0', overflowY: 'auto' }}>
+        <div style={{ width: '48%', display: 'flex', flexDirection: 'column', gap: '20px', paddingTop: '20px' }}>
 
-      <div style={{ maxWidth: '820px', margin: '0 auto', width: '100%', padding: '48px 40px 64px' }}>
-
-        {/* 클라우드 한 줄 정의 */}
-        <div style={{
-          background: '#1e2a3a', border: '1px solid #2d4a6b',
-          borderRadius: '8px', padding: '24px 28px', marginBottom: '40px',
-          display: 'flex', gap: '16px', alignItems: 'flex-start',
-        }}>
-          <span style={{ fontSize: '28px', flexShrink: 0 }}>🥟</span>
+          {/* 타이틀 */}
           <div>
-            <div style={{ fontSize: '13px', fontWeight: 700, color: '#63b3ed', marginBottom: '6px', letterSpacing: '0.5px' }}>
-              아저씨가 처음 들은 말: "클라우드가 뭔데?"
+            <div style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '3px', color: '#ffd700', textTransform: 'uppercase', marginBottom: '10px', background: 'rgba(0,0,0,0.3)', display: 'inline-block', padding: '4px 12px', borderRadius: '20px' }}>
+              🥟 고향만두 아저씨 살아남기
             </div>
-            <p style={{ fontSize: '15px', color: '#e2e8f0', lineHeight: 1.8, margin: 0 }}>
-              쉽게 말하면 <strong style={{ color: '#f6e05e' }}>남의 컴퓨터를 빌려 쓰는 것</strong>이에요.
-              만두 반죽기를 사는 대신 필요할 때만 빌리는 것처럼, 아마존(AWS)의 컴퓨터를
-              쓴 만큼만 돈 내고 빌려 쓰면 돼요. 안 쓰면 반납하면 그만이고요.
+            <h1 style={{ fontSize: '32px', fontWeight: 900, color: '#3d1c00', lineHeight: 1.2, marginBottom: '8px', textShadow: '1px 1px 0 rgba(255,255,255,0.5)' }}>
+              만두만으론<br/>살아남을 수 없다…
+            </h1>
+            <p style={{ fontSize: '14px', color: '#5a2d00', lineHeight: 1.7 }}>
+              대한민국 자영업의 험난함을 몸소 깨달은 고향만두 아저씨.<br/>
+              결국 <strong style={{ color: '#cc5500' }}>클라우드</strong>를 배우기로 결심했다. ㅇㅁㅇ
             </p>
           </div>
-        </div>
 
-        {/* 세 가지 재료 */}
-        <div style={{ marginBottom: '40px' }}>
-          <div style={{ fontSize: '13px', fontWeight: 700, color: '#718096', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>
-            🥟 만두가게도 이 세 가지로 돌아가요
+          {/* 클라우드 한 줄 정의 */}
+          <div style={{ background: 'rgba(255,255,255,0.96)', borderRadius: '12px', padding: '16px 20px', border: '2px solid rgba(255,153,0,0.3)' }}>
+            <div style={{ fontSize: '12px', fontWeight: 800, color: '#cc5500', marginBottom: '6px' }}>아저씨가 처음 들은 말: "클라우드가 뭔데?"</div>
+            <p style={{ fontSize: '13px', color: '#3d1c00', lineHeight: 1.7, margin: 0 }}>
+              쉽게 말하면 <strong style={{ color: '#cc5500' }}>남의 컴퓨터를 빌려 쓰는 것</strong>이에요.
+              만두 반죽기를 사는 대신 필요할 때만 빌리는 것처럼, 쓴 만큼만 돈 내고 빌려 쓰면 돼요.
+            </p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-            {[
-              {
-                emoji: '🖥️', name: '서버', sub: 'Compute',
-                color: '#f6ad55', bg: '#2d1f0a',
-                analogy: '아저씨 본인',
-                desc: '"만두 주문 들어왔다!" 요청을 받아서 처리하는 두뇌예요. 아저씨가 혼자 다 처리하듯, EC2·Lambda가 이 역할이에요.',
-              },
-              {
-                emoji: '🛣️', name: '네트워크', sub: 'Network',
-                color: '#63b3ed', bg: '#0a1f2d',
-                analogy: '배달 도로',
-                desc: '손님 폰 → 주방 → 다시 손님 폰. 데이터가 안전하게 오가는 통로예요. VPC, API Gateway가 이 도로 역할이에요.',
-              },
-              {
-                emoji: '📦', name: '저장소', sub: 'Storage',
-                color: '#68d391', bg: '#0a2d1a',
-                analogy: '냉동창고 + 장부',
-                desc: '만두 재료는 냉동창고(S3)에, 주문·고객 기록은 장부(RDS)에. 필요할 때 꺼내쓰면 돼요.',
-              },
-            ].map(item => (
-              <div key={item.name} style={{
-                background: item.bg, border: `1px solid ${item.color}33`,
-                borderTop: `3px solid ${item.color}`,
-                borderRadius: '8px', padding: '20px',
-              }}>
-                <div style={{ fontSize: '32px', marginBottom: '10px' }}>{item.emoji}</div>
-                <div style={{ fontSize: '15px', fontWeight: 700, color: item.color, marginBottom: '2px' }}>
-                  {item.name}
-                </div>
-                <div style={{ fontSize: '11px', color: '#718096', marginBottom: '10px', letterSpacing: '0.5px' }}>
-                  만두가게로는 → <span style={{ color: '#a0aec0' }}>{item.analogy}</span>
-                </div>
-                <p style={{ fontSize: '12px', color: '#a0aec0', lineHeight: 1.7, margin: 0 }}>
-                  {item.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        {/* 튜토리얼 미리보기 로드맵 */}
-        <div style={{ marginBottom: '48px' }}>
-          <div style={{ fontSize: '13px', fontWeight: 700, color: '#718096', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>
-            🗺️ 아저씨의 생존 로드맵
+          {/* 세 가지 */}
+          <div>
+            <div style={{ fontSize: '11px', fontWeight: 800, color: '#cc5500', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>🥟 만두가게도 이 세 가지로 돌아가요</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+              {[
+                { emoji: '🖥️', name: '서버', color: '#ff9900', analogy: '아저씨 본인', desc: 'EC2 · Lambda' },
+                { emoji: '🛣️', name: '네트워크', color: '#3b82f6', analogy: '배달 도로', desc: 'VPC · API GW' },
+                { emoji: '📦', name: '저장소', color: '#22c55e', analogy: '냉동창고+장부', desc: 'S3 · RDS' },
+              ].map(item => (
+                <div key={item.name} style={{ background: 'rgba(255,255,255,0.96)', border: `2px solid ${item.color}60`, borderRadius: '10px', padding: '12px 10px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '24px', marginBottom: '4px' }}>{item.emoji}</div>
+                  <div style={{ fontSize: '13px', fontWeight: 800, color: item.color }}>{item.name}</div>
+                  <div style={{ fontSize: '10px', color: '#7a4a20', marginBottom: '2px' }}>→ {item.analogy}</div>
+                  <div style={{ fontSize: '10px', color: '#7a4a20', fontWeight: 700 }}>{item.desc}</div>
+                </div>
+              ))}
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-            {[
-              { num: 1, emoji: '📄', color: '#f6ad55', title: '만두 메뉴판을 인터넷에 올리자', desc: '정적 호스팅 — 서버 없이 파일만으로 가게 소개 페이지 공개', badge: 'S3' },
-              { num: 2, emoji: '📱', color: '#63b3ed', title: '앱에서 직접 만두 주문받자', desc: '3-Tier — 화면 · 서버 · DB가 협력하는 진짜 주문 시스템', badge: 'EC2 + RDS' },
-              { num: 3, emoji: '🤖', color: '#b794f4', title: 'AI 직원을 뽑자 (인건비 0원)', desc: '서버리스 — Lambda + GPT로 24시간 만두 추천 AI 추가', badge: 'Lambda' },
-            ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', gap: '0' }}>
-                {/* 타임라인 선 */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '48px', flexShrink: 0 }}>
-                  <div style={{
-                    width: '36px', height: '36px', borderRadius: '50%',
-                    background: item.color, color: '#16191f',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '15px', fontWeight: 800, flexShrink: 0,
-                    boxShadow: `0 0 12px ${item.color}66`,
-                  }}>
-                    {item.num}
-                  </div>
-                  {i < 2 && <div style={{ width: '2px', flex: 1, background: '#2d3748', minHeight: '24px', margin: '4px 0' }} />}
-                </div>
 
-                {/* 카드 */}
-                <div style={{
-                  flex: 1, marginLeft: '16px',
-                  background: '#1e2533', border: '1px solid #2d3748',
-                  borderRadius: '6px', padding: '14px 18px',
-                  marginBottom: i < 2 ? '8px' : '0',
-                  display: 'flex', alignItems: 'center', gap: '12px',
-                }}>
-                  <span style={{ fontSize: '24px', flexShrink: 0 }}>{item.emoji}</span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#e2e8f0', marginBottom: '3px' }}>{item.title}</div>
-                    <div style={{ fontSize: '12px', color: '#718096' }}>{item.desc}</div>
-                  </div>
-                  <span style={{
-                    fontSize: '11px', fontWeight: 700, color: item.color,
-                    background: `${item.color}22`, border: `1px solid ${item.color}44`,
-                    padding: '3px 10px', borderRadius: '20px', flexShrink: 0,
-                  }}>
-                    {item.badge}
-                  </span>
+          {/* 로드맵 */}
+          <div>
+            <div style={{ fontSize: '11px', fontWeight: 800, color: '#cc5500', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>🗺️ 아저씨의 생존 로드맵</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {[
+                { num: 1, color: '#ff9900', title: '가게 홍보 홈페이지', badge: 'S3' },
+                { num: 2, color: '#3b82f6', title: '만두 주문 앱', badge: 'EC2 + RDS' },
+                { num: 3, color: '#a855f7', title: 'AI 만두 추천', badge: 'Lambda' },
+              ].map(item => (
+                <div key={item.num} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.96)', borderRadius: '8px', padding: '8px 14px', border: `1px solid ${item.color}40` }}>
+                  <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: item.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 900, flexShrink: 0 }}>{item.num}</div>
+                  <div style={{ flex: 1, fontSize: '13px', fontWeight: 700, color: '#3d1c00' }}>{item.title}</div>
+                  <span style={{ fontSize: '10px', fontWeight: 700, color: item.color, background: `${item.color}20`, border: `1px solid ${item.color}40`, padding: '2px 8px', borderRadius: '20px' }}>{item.badge}</span>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div style={{ textAlign: 'center', paddingTop: '8px' }}>
+            <button
+              onClick={onDone}
+              style={{
+                background: 'linear-gradient(90deg, #ff9900, #ff7700)',
+                color: '#3d1c00', border: 'none', borderRadius: '12px',
+                padding: '14px 36px', fontSize: '16px', fontWeight: 900,
+                cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px',
+                boxShadow: '0 4px 0 #c47a00, 0 6px 20px rgba(255,153,0,0.4)',
+                transition: 'transform 0.1s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
+            >
+              튜토리얼 선택하러 가기 <ChevronRight size={18} />
+            </button>
           </div>
         </div>
-
-        {/* CTA */}
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: '15px', color: '#718096', marginBottom: '20px' }}>
-            아저씨와 함께 살아남을 준비 됐나요?
-          </p>
-          <button
-            onClick={onDone}
-            style={{
-              background: 'linear-gradient(90deg, #f6ad55, #ed8936)',
-              color: '#16191f', border: 'none', borderRadius: '4px',
-              padding: '14px 40px', fontSize: '16px', fontWeight: 800,
-              cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px',
-              boxShadow: '0 4px 20px rgba(246, 173, 85, 0.4)',
-              transition: 'transform 0.1s',
-            }}
-            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
-            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-          >
-            튜토리얼 선택하러 가기 <ChevronRight size={20} />
-          </button>
-        </div>
-
       </div>
     </div>
   );

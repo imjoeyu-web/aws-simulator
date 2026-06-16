@@ -1,4 +1,3 @@
-import React from 'react';
 import SajangCharacter from './SajangCharacter';
 
 const MOOD_QUOTES = {
@@ -15,9 +14,10 @@ const MOOD_COLOR = {
   ecstatic:   '#68d391',
 };
 
-export default function StepCompleteToast({ step, cost, mood, stepNumber }) {
+export default function StepCompleteToast({ step, mood, stepNumber, creditDelta }) {
   if (!step) return null;
   const accent = MOOD_COLOR[mood] ?? '#ff9900';
+  const spent = typeof creditDelta === 'number' ? Math.abs(creditDelta) : 0;
 
   return (
     <div style={{
@@ -57,18 +57,20 @@ export default function StepCompleteToast({ step, cost, mood, stepNumber }) {
           {MOOD_QUOTES[mood]}
         </div>
 
-        {/* 비용 뱃지 */}
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: '5px',
-          background: 'rgba(252,129,129,0.12)',
-          border: '1px solid rgba(252,129,129,0.25)',
-          borderRadius: '4px', padding: '3px 8px',
-        }}>
-          <span style={{ fontSize: '10px', color: '#fc8181' }}>💸</span>
-          <span style={{ fontSize: '11px', fontWeight: 700, color: '#fc8181', fontFamily: 'monospace' }}>
-            +${cost.toFixed(3)} 청구됨
-          </span>
-        </div>
+        {/* 크레딧 소모 뱃지 */}
+        {spent > 0 && (
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: '5px',
+            background: 'rgba(252,129,129,0.12)',
+            border: '1px solid rgba(252,129,129,0.25)',
+            borderRadius: '4px', padding: '3px 8px',
+          }}>
+            <span style={{ fontSize: '10px', color: '#fc8181' }}>💸</span>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: '#fc8181', fontFamily: 'monospace' }}>
+              크레딧 -{spent} 소모
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

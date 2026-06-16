@@ -12,7 +12,7 @@ export default function VirtualTerminal({ questState, onNavigate, s3Buckets = []
   const endRef = useRef(null);
 
   const currentStepId = questState.currentStep.id;
-  
+
   const getPrompt = () => {
     const branch = inGitRepo ? ' (main)' : '';
     return `ec2-user:${currentPath}${branch} $`;
@@ -24,6 +24,20 @@ export default function VirtualTerminal({ questState, onNavigate, s3Buckets = []
 
     const cmd = input.trim();
     const newLogs = [...logs, { type: 'input', text: `${getPrompt()} ${cmd}` }];
+
+    // ── 실수 이벤트: git push (API 키 노출 위험) ──
+    if (cmd.startsWith('git push')) {
+      newLogs.push({ type: 'error', text: 'Enumerating objects: 12, done.' });
+      newLogs.push({ type: 'error', text: 'remote: warning: Detected possible secret in commit!' });
+      newLogs.push({ type: 'error', text: 'remote: ──────────────────────────────────────────' });
+      newLogs.push({ type: 'error', text: 'remote: !! OPENAI_API_KEY detected in .env file !!' });
+      newLogs.push({ type: 'error', text: 'remote: ──────────────────────────────────────────' });
+      newLogs.push({ type: 'error', text: '⚠ .env 파일이 GitHub에 올라갔어요! .gitignore에 추가하세요.' });
+      setTimeout(() => questState.triggerMistake?.('api_key_exposed'), 800);
+      setLogs([...newLogs]);
+      setInput('');
+      return;
+    }
 
     if (cmd.startsWith('git clone')) {
       newLogs.push({ type: 'output', text: 'Cloning into \'Nxt-Classic-Architecture\'...' });
@@ -88,7 +102,7 @@ export default function VirtualTerminal({ questState, onNavigate, s3Buckets = []
         newLogs.push({ type: 'error', text: '예시) aws s3 cp build s3://my-bucket-name --recursive' });
       } else if (!s3Buckets.some(b => b.name === bucketPart)) {
         newLogs.push({ type: 'error', text: `An error occurred (NoSuchBucket) when calling the PutObject operation: The specified bucket does not exist` });
-        newLogs.push({ type: 'error', text: `→ S3에서 버킷을 먼저 생성하거나 이름을 정확히 확인하세요.` });
+        newLogs.push({ type: 'error', text: `⚠ S3에서 버킷을 먼저 생성하거나 이름을 정확히 확인하세요.` });
       } else {
         newLogs.push({ type: 'output', text: `upload: build/index.html to s3://${bucketPart}/index.html` });
         newLogs.push({ type: 'output', text: `upload: build/asset-manifest.json to s3://${bucketPart}/asset-manifest.json` });
@@ -132,19 +146,18 @@ export default function VirtualTerminal({ questState, onNavigate, s3Buckets = []
 
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: '#090a0f' }}>
-      
-      {/* Cloud9 상단 메뉴바 (실제 AWS Cloud9 IDE 상단 모방) */}
-      <div style={{ 
-        background: '#333', 
-        borderBottom: '1px solid #555', 
-        display: 'flex', 
+
+      {/* Cloud9 상단 메뉴바 */}
+      <div style={{
+        background: '#333',
+        borderBottom: '1px solid #555',
+        display: 'flex',
         alignItems: 'center',
         height: '32px',
         padding: '0 12px',
         gap: '16px',
         flexShrink: 0
       }}>
-        {/* AWS 로고 + AWS 콘솔 돌아가기 */}
         <button
           onClick={() => onNavigate && onNavigate('home')}
           style={{
@@ -168,7 +181,6 @@ export default function VirtualTerminal({ questState, onNavigate, s3Buckets = []
           AWS 콘솔
         </button>
 
-        {/* Cloud9 메뉴 아이템들 */}
         {['파일', '편집', '찾기', '보기', '이동', '실행', '도구', '창', '지원'].map(menu => (
           <span key={menu} style={{ fontSize: '12px', color: '#ccc', cursor: 'pointer' }}>{menu}</span>
         ))}
@@ -179,11 +191,11 @@ export default function VirtualTerminal({ questState, onNavigate, s3Buckets = []
         <Terminal size={16} color="#0f0" />
         <span style={{ fontSize: '13px', fontWeight: 500, color: '#ccc' }}>bash - ec2-user@ip-172-31-0-10</span>
       </div>
-      
+
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px', fontFamily: 'monospace', fontSize: '14px', lineHeight: 1.6 }}>
         {logs.map((log, i) => (
-          <div key={i} style={{ 
-            color: log.type === 'input' ? '#fff' 
+          <div key={i} style={{
+            color: log.type === 'input' ? '#fff'
                  : log.type === 'system' ? '#0f0'
                  : log.type === 'link' ? '#5bc8f5'
                  : log.type === 'error' ? '#ff6b6b'
@@ -195,15 +207,15 @@ export default function VirtualTerminal({ questState, onNavigate, s3Buckets = []
         ))}
         <form onSubmit={handleCommand} style={{ display: 'flex', marginTop: '8px', alignItems: 'center' }}>
           <span style={{ color: '#0f0', marginRight: '8px', whiteSpace: 'nowrap' }}>{getPrompt()}</span>
-          <input 
-            type="text" 
+          <input
+            type="text"
             value={input}
             onChange={e => setInput(e.target.value)}
             autoFocus
-            style={{ 
-              background: 'transparent', border: 'none', color: '#fff', 
-              fontFamily: 'monospace', fontSize: '14px', flex: 1, outline: 'none' 
-            }} 
+            style={{
+              background: 'transparent', border: 'none', color: '#fff',
+              fontFamily: 'monospace', fontSize: '14px', flex: 1, outline: 'none'
+            }}
           />
         </form>
         <div ref={endRef} />

@@ -1,5 +1,38 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 
+// ─── 크레딧 시스템 ───
+export const INITIAL_CREDITS = 100;
+
+// 스텝 완료 시 차감 비용
+export const STEP_CREDIT_COSTS = {
+  header:   0,    // 리전 설정은 무료
+  cloud9:   5,
+  terminal: 1,
+  s3:       2,
+  ec2:      8,
+  rds:      12,
+  lambda:   1,
+};
+
+// 실수 이벤트 정의
+export const MISTAKE_EVENTS = {
+  api_key_exposed:   { label: '🚨 API 키가 GitHub에 노출됐어요!', penalty: 30, message: '해킹당했다...!!! 누군가 내 계정으로 서버를 막 만들고 있어요 😱' },
+  ec2_left_on:       { label: '⚠️ EC2를 끄지 않고 방치했어요!', penalty: 8,  message: '...뭔가 돈이 새고 있어. 쓰지 않는 서버는 꺼야 해요 😟' },
+  security_group_open: { label: '⚠️ 보안그룹이 전체 공개됐어요!', penalty: 15, message: '누구나 내 서버에 들어올 수 있잖아?! 0.0.0.0/0은 위험해요 😰' },
+  wrong_region:      { label: '⚠️ 리전을 잘못 설정했어요!', penalty: 5,  message: '서울인 줄 알았는데 버지니아였어... 리전마다 요금이 달라요 😅' },
+};
+
+// 크레딧 → 감정 매핑
+export function getMoodFromCredits(credits, combo) {
+  if (combo <= -2) return 'worried';
+  if (combo >= 3 && credits >= 70) return 'ecstatic';
+  if (credits >= 75) return 'ecstatic';
+  if (credits >= 50) return 'happy';
+  if (credits >= 25) return 'determined';
+  if (credits >= 10) return 'worried';
+  return 'crisis';
+}
+
 // ─── Tutorial 1: Resume 정적 호스팅 ───
 export const TUTORIAL_1_STEPS = [
   {
@@ -143,34 +176,87 @@ export function useQuestState(tutorialId = 1) {
   const steps = ALL_TUTORIALS.find(t => t.id === tutorialId)?.steps || TUTORIAL_1_STEPS;
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [completedSteps, setCompletedSteps] = useState([]);
+  const [credits, setCredits] = useState(INITIAL_CREDITS);
+  const [combo, setCombo] = useState(0);
+  const [lastEvent, setLastEvent] = useState(null);
   const prevTutorialIdRef = useRef(tutorialId);
 
   useEffect(() => {
     if (prevTutorialIdRef.current !== tutorialId) {
       setCurrentStepIndex(0);
       setCompletedSteps([]);
+      setCredits(INITIAL_CREDITS);
+      setCombo(0);
+      setLastEvent(null);
       prevTutorialIdRef.current = tutorialId;
     }
   }, [tutorialId]);
 
+  const completeStep = useCallback((stepId) => {
+    // 이미 완료된 스텝이면 무시
+    if (completedSteps.includes(stepId)) return;
+
+    const step = steps.find(s => s.id === stepId);
+    if (!step) return;
+
+    const cost = STEP_CREDIT_COSTS[step?.service] ?? 1;
+    const newCombo = combo >= 0 ? combo + 1 : 1;
+    const bonus = newCombo === 3 ? 5 : newCombo === 5 ? 8 : 0;
+
+    setCredits(prev => Math.min(100, Math.max(0, prev - cost + bonus)));
+    setCombo(newCombo);
+    setLastEvent({
+      type: 'success',
+      message: bonus > 0 ? `연속 ${newCombo}회 성공! 크레딧 +$${bonus} 보너스 🎉` : null,
+      delta: -cost + bonus,
+    });
+    setCompletedSteps(prev => [...prev, stepId]);
+
+    // currentStepIndex를 다음 미완료 스텝으로 자동 이동
+    const newCompleted = [...completedSteps, stepId];
+    const nextIndex = steps.findIndex(s => !newCompleted.includes(s.id));
+    if (nextIndex !== -1) setCurrentStepIndex(nextIndex);
+  }, [completedSteps, steps, combo]);
+
+  // 하위 호환성 — completeCurrentStep도 유지
   const completeCurrentStep = useCallback(() => {
-    setCompletedSteps(prev => [...prev, steps[currentStepIndex].id]);
-    setCurrentStepIndex(prev => Math.min(prev + 1, steps.length - 1));
-  }, [currentStepIndex, steps]);
+    const step = steps[currentStepIndex];
+    if (step) completeStep(step.id);
+  }, [currentStepIndex, steps, completeStep]);
+
+  const triggerMistake = useCallback((mistakeKey) => {
+    const event = MISTAKE_EVENTS[mistakeKey];
+    if (!event) return;
+    const newCombo = combo <= 0 ? combo - 1 : -1;
+    setCredits(prev => Math.max(0, prev - event.penalty));
+    setCombo(newCombo);
+    setLastEvent({ type: 'mistake', message: event.message, delta: -event.penalty, label: event.label });
+  }, [combo]);
 
   const reset = useCallback(() => {
     setCurrentStepIndex(0);
     setCompletedSteps([]);
+    setCredits(INITIAL_CREDITS);
+    setCombo(0);
+    setLastEvent(null);
   }, []);
+
+  const mood = getMoodFromCredits(credits, combo);
 
   return {
     currentStepIndex,
     currentStep: steps[currentStepIndex],
     completedSteps,
+    completeStep,
     completeCurrentStep,
+    triggerMistake,
     reset,
     isQuestComplete: completedSteps.length === steps.length,
     totalSteps: steps.length,
     steps,
+    credits,
+    combo,
+    mood,
+    lastEvent,
   };
 }
