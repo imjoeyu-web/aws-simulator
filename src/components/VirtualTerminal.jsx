@@ -52,12 +52,17 @@ export default function VirtualTerminal({ questState, onNavigate, s3Buckets = []
     else if (cmd.startsWith('cd ')) {
       const target = cmd.slice(3).trim();
       if (target.includes('1.Tutorial/3.Resume') || target.includes('3.Resume')) {
-        const shortPath = '~/environment/Nxt-Classic-Architecture/1.Tutorial/3.Resume';
-        setCurrentPath(shortPath);
+        setCurrentPath('~/environment/Nxt-Classic-Architecture/1.Tutorial/3.Resume');
         setInGitRepo(true);
-        if (currentStepId.includes('_cd')) {
-          setTimeout(() => questState.completeCurrentStep(), 300);
-        }
+        if (currentStepId.includes('_cd')) setTimeout(() => questState.completeCurrentStep(), 300);
+      } else if (target.includes('2.RandomTextApp/client') || target.includes('RandomTextApp/client')) {
+        setCurrentPath('~/environment/Nxt-Classic-Architecture/2.RandomTextApp/client');
+        setInGitRepo(true);
+        if (currentStepId.includes('_cd')) setTimeout(() => questState.completeCurrentStep(), 300);
+      } else if (target.includes('3.') && target.includes('client')) {
+        setCurrentPath('~/environment/Nxt-Classic-Architecture/3.AITextApp/client');
+        setInGitRepo(true);
+        if (currentStepId.includes('_cd')) setTimeout(() => questState.completeCurrentStep(), 300);
       } else if (target === '..') {
         setCurrentPath(prev => prev.split('/').slice(0, -1).join('/') || '~');
       } else {
@@ -115,8 +120,8 @@ export default function VirtualTerminal({ questState, onNavigate, s3Buckets = []
       }
     }
     else if (cmd === 'ls' || cmd === 'ls -la') {
-      if (currentPath.includes('3.Resume')) {
-        newLogs.push({ type: 'output', text: 'build  node_modules  package.json  public  README.md  src' });
+      if (currentPath.includes('3.Resume') || currentPath.includes('client')) {
+        newLogs.push({ type: 'output', text: 'build  node_modules  package.json  public  README.md  src  .env' });
       } else if (currentPath === '~') {
         newLogs.push({ type: 'output', text: 'Nxt-Classic-Architecture' });
       } else {

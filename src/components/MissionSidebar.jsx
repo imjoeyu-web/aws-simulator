@@ -1,5 +1,38 @@
+import { useState } from 'react';
 import { CheckCircle2, Circle, ChevronRight } from 'lucide-react';
 import SajangCharacter from './SajangCharacter';
+
+function CopyableTemplate({ text }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard?.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <div style={{ marginTop: '10px', position: 'relative' }}>
+      <pre style={{
+        background: '#1e2330', color: '#a8d8b0',
+        fontSize: '10.5px', fontFamily: 'monospace', lineHeight: 1.55,
+        padding: '10px 12px', borderRadius: '4px',
+        whiteSpace: 'pre-wrap', wordBreak: 'break-all', margin: 0,
+        border: '1px solid #2d3748',
+      }}>{text}</pre>
+      <button
+        onClick={handleCopy}
+        style={{
+          position: 'absolute', top: '6px', right: '6px',
+          background: copied ? '#1d8102' : '#2d3748',
+          color: '#fff', border: 'none', borderRadius: '3px',
+          fontSize: '10px', fontWeight: 700, padding: '2px 8px',
+          cursor: 'pointer', transition: 'background 0.2s',
+        }}
+      >
+        {copied ? '복사됨!' : '복사'}
+      </button>
+    </div>
+  );
+}
 
 const MOOD_CONFIG = {
   worried:    { label: '...이게 맞나?',      color: '#e53e3e' },
@@ -131,10 +164,12 @@ export default function MissionSidebar({ steps, currentStepIndex, completedSteps
         {steps.map((step, index) => {
           const isCompleted = completedSteps.includes(step.id);
           const isCurrent = index === currentStepIndex;
+          const isFuture = !isCompleted && !isCurrent;
 
           return (
             <div
               key={step.id}
+              className={isFuture ? 'step-future' : isCurrent ? 'step-current' : ''}
               style={{
                 display: 'flex',
                 gap: '12px',
@@ -143,7 +178,6 @@ export default function MissionSidebar({ steps, currentStepIndex, completedSteps
                 background: isCurrent ? '#ffffff' : 'transparent',
                 border: isCurrent ? '1px solid var(--aws-orange)' : '1px solid transparent',
                 marginBottom: '4px',
-                opacity: (isCompleted || isCurrent) ? 1 : 0.6,
                 transition: 'all 0.2s ease',
                 boxShadow: isCurrent ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
                 position: 'relative',
@@ -168,6 +202,9 @@ export default function MissionSidebar({ steps, currentStepIndex, completedSteps
                   <p style={{ fontSize: '12px', color: '#545b64', marginTop: '6px', lineHeight: 1.4 }}>
                     {step.description}
                   </p>
+                )}
+                {isCurrent && step.template && (
+                  <CopyableTemplate text={step.template} />
                 )}
 
                 {isCurrent && step.why && (

@@ -1,4 +1,3 @@
-import React from 'react';
 import { ChevronRight } from 'lucide-react';
 
 const INTROS = {
@@ -61,42 +60,42 @@ export default function TutorialIntro({ tutorialId, onStart, onBack }) {
 
   return (
     <div style={{ position: 'absolute', inset: 0, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
-      <img src="/bgi_intro2.png" alt="인트로 배경" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+      <img src="/bgi_intro.png" alt="인트로 배경" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
 
       {/* 뒤로가기 */}
       <button onClick={onBack} style={{ position: 'absolute', top: '3%', left: '2%', zIndex: 10, background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '12px', padding: '5px 12px', borderRadius: '20px', fontWeight: 700 }}>
         ← 목록으로
       </button>
 
-      {/* 칠판 위 오버레이 — 오른쪽 55% */}
+      {/* 칠판 위 오버레이 — 오른쪽, 화면 높이에 맞게 자동 조정 */}
       <div style={{
-        position: 'absolute', right: '2%', top: '8%', bottom: '8%',
-        width: '54%', zIndex: 1,
-        display: 'flex', flexDirection: 'column', gap: '12px',
-        justifyContent: 'center', padding: '0 16px',
-        overflowY: 'auto',
+        position: 'absolute', left: '38%', right: '8%', top: '8%', bottom: '6%',
+        zIndex: 1,
+        display: 'flex', flexDirection: 'column', gap: 'clamp(7px, 1.4vh, 14px)',
+        justifyContent: 'center', padding: '0 clamp(14px, 2vw, 24px) 0 clamp(6px, 0.8vw, 12px)',
+        boxSizing: 'border-box', overflowX: 'hidden',
       }}>
         {/* 배지 + 제목 */}
         <div>
-          <div style={{ fontSize: '10px', fontWeight: 800, color: data.color, letterSpacing: '2px', marginBottom: '4px' }}>{data.badge}</div>
-          <h1 style={{ fontSize: '22px', fontWeight: 900, color: '#3d1c00', margin: 0, lineHeight: 1.2 }}>{data.headline}</h1>
+          <div style={{ fontSize: 'clamp(10px, 1.2vh, 12px)', fontWeight: 800, color: data.color, letterSpacing: '2px', marginBottom: 'clamp(2px, 0.5vh, 5px)' }}>{data.badge}</div>
+          <h1 style={{ fontSize: 'clamp(18px, 2.8vh, 26px)', fontWeight: 900, color: '#3d1c00', margin: 0, lineHeight: 1.2 }}>{data.headline}</h1>
         </div>
 
         {/* 스토리 */}
-        <div style={{ background: 'rgba(255,255,255,0.85)', borderRadius: '10px', padding: '12px 14px', border: `2px solid ${data.color}50` }}>
-          <div style={{ fontSize: '10px', fontWeight: 800, color: data.color, marginBottom: '5px' }}>🥟 아저씨 상황</div>
-          <p style={{ fontSize: '13px', color: '#3d1c00', lineHeight: 1.6, margin: 0 }}>{data.story}</p>
+        <div style={{ background: 'rgba(255,255,255,0.96)', borderRadius: '10px', padding: 'clamp(9px, 1.4vh, 15px)', border: `2px solid ${data.color}50` }}>
+          <div style={{ fontSize: 'clamp(10px, 1.2vh, 12px)', fontWeight: 800, color: data.color, letterSpacing: '0.5px', marginBottom: 'clamp(3px, 0.6vh, 6px)' }}>🥟 아저씨 상황</div>
+          <p style={{ fontSize: 'clamp(12px, 1.5vh, 15px)', color: '#3d1c00', lineHeight: 1.55, margin: 0 }}>{data.story}</p>
         </div>
 
         {/* 비유 */}
-        <div style={{ background: 'rgba(255,255,255,0.85)', borderRadius: '10px', padding: '12px 14px', border: `2px solid ${data.color}50` }}>
-          <div style={{ fontSize: '10px', fontWeight: 800, color: data.color, marginBottom: '8px' }}>🔄 배달앱 → AWS</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <div style={{ background: 'rgba(255,255,255,0.96)', borderRadius: '10px', padding: 'clamp(9px, 1.4vh, 15px)', border: `2px solid ${data.color}50` }}>
+          <div style={{ fontSize: 'clamp(10px, 1.2vh, 12px)', fontWeight: 800, color: data.color, letterSpacing: '0.5px', marginBottom: 'clamp(5px, 0.9vh, 9px)' }}>🔄 배달앱 → AWS</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(5px, 0.9vh, 8px)' }}>
             {data.analogy.map((row, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '13px', color: '#3d1c00', fontWeight: 600, flex: 1 }}>{row.real}</span>
-                <span style={{ fontSize: '11px', color: '#888' }}>→</span>
-                <span style={{ fontSize: '13px', color: data.color, fontWeight: 700, flex: 1 }}>{row.aws}</span>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: 'clamp(12px, 1.5vh, 15px)', color: '#3d1c00', fontWeight: 600, flex: 1 }}>{row.real}</span>
+                <ChevronRight size={18} strokeWidth={2.5} style={{ flexShrink: 0, color: data.color }} />
+                <span style={{ fontSize: 'clamp(12px, 1.5vh, 15px)', color: data.color, fontWeight: 700, flex: 1 }}>{row.aws}</span>
               </div>
             ))}
           </div>
@@ -105,23 +104,23 @@ export default function TutorialIntro({ tutorialId, onStart, onBack }) {
         {/* 스텝 */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
           {data.steps.map((step) => (
-            <div key={step.num} style={{ background: 'rgba(255,255,255,0.85)', borderRadius: '8px', padding: '8px', textAlign: 'center', borderTop: `3px solid ${data.color}` }}>
-              <div style={{ fontSize: '10px', fontWeight: 800, color: data.color }}>STEP {step.num}</div>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#3d1c00', marginTop: '2px' }}>{step.label}</div>
+            <div key={step.num} style={{ background: 'rgba(255,255,255,0.96)', borderRadius: '8px', padding: 'clamp(6px, 1vh, 10px)', textAlign: 'center', borderTop: `3px solid ${data.color}` }}>
+              <div style={{ fontSize: 'clamp(10px, 1.2vh, 12px)', fontWeight: 800, color: data.color }}>STEP {step.num}</div>
+              <div style={{ fontSize: 'clamp(11px, 1.4vh, 13px)', fontWeight: 700, color: '#3d1c00', marginTop: '2px' }}>{step.label}</div>
             </div>
           ))}
         </div>
 
         {/* 인사이트 + 버튼 */}
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <div style={{ flex: 1, background: `${data.color}15`, border: `1px solid ${data.color}40`, borderRadius: '8px', padding: '10px 12px', fontSize: '12px', color: '#3d1c00', lineHeight: 1.5 }}>
+          <div style={{ flex: 1, background: `${data.color}18`, border: `1.5px solid ${data.color}50`, borderRadius: '8px', padding: 'clamp(8px, 1.3vh, 12px)', fontSize: 'clamp(11px, 1.4vh, 14px)', color: '#3d1c00', lineHeight: 1.5 }}>
             💡 {data.insight}
           </div>
           <button
             onClick={onStart}
             style={{
               background: data.color, color: '#fff', border: 'none', borderRadius: '10px',
-              padding: '12px 16px', fontSize: '14px', fontWeight: 900,
+              padding: 'clamp(10px, 1.5vh, 14px) clamp(14px, 1.5vw, 18px)', fontSize: 'clamp(12px, 1.6vh, 15px)', fontWeight: 900,
               cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
               boxShadow: `0 3px 0 ${data.color}88`, whiteSpace: 'nowrap',
               transition: 'transform 0.1s',

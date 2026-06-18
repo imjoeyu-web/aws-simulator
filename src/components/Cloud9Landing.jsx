@@ -1,7 +1,10 @@
 import React from 'react';
 import { ExternalLink } from 'lucide-react';
 
-export default function Cloud9Landing({ onCreateClick }) {
+const PULSE = { animation: 'step-panel-pulse 1.5s ease-in-out infinite', outline: '2px solid #ff9900', outlineOffset: '3px' };
+
+export default function Cloud9Landing({ onCreateClick, questState }) {
+  const isCreateStep = questState?.currentStep?.id?.includes('c9_create');
   return (
     <div style={{ width: '100%', margin: '0 auto', background: 'var(--bg-page)' }}>
       
@@ -25,10 +28,10 @@ export default function Cloud9Landing({ onCreateClick }) {
         {/* Floating Create Box in Hero */}
         <div style={{ background: '#fff', padding: '24px', borderRadius: '4px', width: '320px', marginLeft: '24px', position: 'relative' }}>
           <h3 style={{ color: 'var(--text-primary)', fontSize: '16px', fontWeight: 700, marginBottom: '20px' }}>새로운 AWS Cloud9 환경</h3>
-          <button 
+          <button
             onClick={onCreateClick}
-            className="aws-btn-primary" 
-            style={{ padding: '8px 24px', display: 'inline-block' }}
+            className="aws-btn-primary"
+            style={{ padding: '8px 24px', display: 'inline-block', ...(isCreateStep ? PULSE : {}) }}
           >
             환경 생성
           </button>

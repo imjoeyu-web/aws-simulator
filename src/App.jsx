@@ -3,6 +3,8 @@ import Header from './components/Header';
 import MissionSidebar from './components/MissionSidebar';
 import Cloud9Console from './components/Cloud9Console';
 import S3Console from './components/S3Console';
+import RDSConsole from './components/RDSConsole';
+import EC2Console from './components/EC2Console';
 import VirtualTerminal from './components/VirtualTerminal';
 import TutorialHome from './components/TutorialHome';
 import TutorialIntro from './components/TutorialIntro';
@@ -14,6 +16,26 @@ import { useQuestState, ALL_TUTORIALS } from './hooks/useQuestState';
 import BankruptModal from './components/BankruptModal';
 import MistakeToast from './components/MistakeToast';
 
+// 16:9 고정 래퍼 — 홈/인트로/미션 선택 화면에만 사용
+function GameScreen({ children }) {
+  return (
+    <div style={{
+      width: '100%', height: '100%',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      overflow: 'hidden',
+    }}>
+      <div style={{
+        position: 'relative',
+        width: '100%',
+        maxWidth: 'calc((100vh - 40px) * 16 / 9)',
+        aspectRatio: '16 / 9',
+        overflow: 'hidden',
+      }}>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 function App() {
   const [currentService, setCurrentService] = useState('home');
@@ -32,6 +54,22 @@ function App() {
   const [s3ActiveBucket, setS3ActiveBucket] = useState(null);
 
   const questState = useQuestState(selectedTutorialId);
+
+  // 🐛 디버그 단축키 (개발용 — 배포 시 이 useEffect 블록만 삭제)
+  useEffect(() => {
+    const handler = (e) => {
+      if (!e.shiftKey) return;
+      if (currentService === 'home' || introTutorialId !== null) return;
+      if (e.key === 'S' || e.key === 's') {
+        const next = questState.steps.find(s => !questState.completedSteps.includes(s.id));
+        if (next) questState.completeStep(next.id);
+      } else if (e.key === 'C' || e.key === 'c') {
+        questState.debugClearAll();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [currentService, introTutorialId, questState]);
 
   useEffect(() => {
     const newLen = questState.completedSteps.length;
@@ -95,24 +133,28 @@ function App() {
           />
         )}
 
-        <main className="console-area" style={isGameScreen ? { padding: 0, position: 'relative', overflow: 'hidden' } : {}}>
+        <main className={`console-area${isGameScreen ? ' game-mode' : ''}`}>
 
-          {/* 홈/인트로/미션 선택 — console-area 꽉 채움 */}
-          {currentService === 'home' && introTutorialId === null && showOnboarding && (
-            <CloudOnboarding onDone={() => setShowOnboarding(false)} />
-          )}
-          {currentService === 'home' && introTutorialId === null && !showOnboarding && (
-            <TutorialHome
-              completedTutorials={completedTutorials}
-              onStart={handleShowIntro}
-            />
-          )}
-          {introTutorialId !== null && (
-            <TutorialIntro
-              tutorialId={introTutorialId}
-              onStart={() => handleStartTutorial(introTutorialId)}
-              onBack={() => setIntroTutorialId(null)}
-            />
+          {/* 홈/인트로/미션 선택 — 16:9 고정 */}
+          {isGameScreen && (
+            <GameScreen>
+              {currentService === 'home' && introTutorialId === null && showOnboarding && (
+                <CloudOnboarding onDone={() => setShowOnboarding(false)} />
+              )}
+              {currentService === 'home' && introTutorialId === null && !showOnboarding && (
+                <TutorialHome
+                  completedTutorials={completedTutorials}
+                  onStart={handleShowIntro}
+                />
+              )}
+              {introTutorialId !== null && (
+                <TutorialIntro
+                  tutorialId={introTutorialId}
+                  onStart={() => handleStartTutorial(introTutorialId)}
+                  onBack={() => setIntroTutorialId(null)}
+                />
+              )}
+            </GameScreen>
           )}
 
           {/* 콘솔 화면 — 일반 스크롤 */}
@@ -134,6 +176,12 @@ function App() {
               activeBucket={s3ActiveBucket} setActiveBucket={setS3ActiveBucket}
             />
           )}
+          {currentService === 'rds' && (
+            <RDSConsole questState={questState} onNavigate={setCurrentService} />
+          )}
+          {currentService === 'ec2' && (
+            <EC2Console questState={questState} onNavigate={setCurrentService} />
+          )}
           {currentService === 'terminal' && (
             <VirtualTerminal questState={questState} onNavigate={setCurrentService} s3Buckets={s3Buckets} />
           )}
@@ -152,8 +200,9 @@ function App() {
           tutorial={currentTutorial}
           steps={questState.steps}
           completedSteps={questState.completedSteps}
+          credits={questState.credits}
           nextTutorial={nextTutorial}
-          onNext={() => { setCurrentService('home'); handleShowIntro(nextTutorial.id); }}
+          onNext={() => { questState.reset(); setSelectedTutorialId(nextTutorial.id); setCurrentService('home'); setIntroTutorialId(nextTutorial.id); }}
           onBack={() => { setCurrentService('home'); setShowOnboarding(false); }}
         />
       )}

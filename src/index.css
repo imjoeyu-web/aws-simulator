@@ -69,6 +69,7 @@ body {
   padding: 0;
   overflow: hidden;
   height: 100%;
+  background: #0a0a0a;
 }
 
 /* AWS Forms & Inputs */
@@ -189,9 +190,30 @@ body {
   background-color: #ec8e00;
 }
 
-/* Quest Highlight (Keeping some gamification subtly) */
+/* Quest Highlight */
 .success-glow {
-  border-left: 4px solid #1d8102 !important;
+  border: 2px solid #ff9900 !important;
+  animation: step-panel-pulse 1.5s ease-in-out infinite;
+}
+
+/* FocusZone */
+.focus-zone {
+  border-radius: 8px;
+  transition: opacity 0.2s, filter 0.2s;
+}
+.focus-active {
+  border: 2px solid #ff9900 !important;
+  animation: step-panel-pulse 1.5s ease-in-out infinite;
+}
+.focus-dimmed {
+  opacity: 0.35;
+  filter: blur(1px);
+  pointer-events: none;
+}
+
+@keyframes step-panel-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(255,153,0,0.5); }
+  50%       { box-shadow: 0 0 0 9px rgba(255,153,0,0.0); }
 }
 
 /* ── 게임 애니메이션 ── */
@@ -221,9 +243,69 @@ body {
   100% { transform: scale(1) translateY(0);       opacity: 1; }
 }
 
+@keyframes stage-clear-logo {
+  0%   { transform: scale(0.6) translateY(-12px); opacity: 0; }
+  65%  { transform: scale(1.06) translateY(4px);  opacity: 1; }
+  100% { transform: scale(1) translateY(0);        opacity: 1; }
+}
+
+@keyframes region-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(255,153,0,0.6), 0 0 10px rgba(255,153,0,0.3); }
+  50%       { box-shadow: 0 0 0 7px rgba(255,153,0,0.0), 0 0 18px rgba(255,153,0,0.0); }
+}
+
+@keyframes star-pop {
+  0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+  70%  { transform: scale(1.25) rotate(6deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg);    opacity: 1; }
+}
+
 .billing-tick {
   display: inline-block;
   animation: billing-tick 0.5s ease-out forwards;
+}
+
+/* ── 가이드 포커스 시스템 ── */
+
+.dimmed {
+  filter: blur(1.5px) brightness(0.55);
+  opacity: 0.7;
+  transition: filter 0.25s ease, opacity 0.25s ease;
+  pointer-events: none;
+  user-select: none;
+}
+
+.step-future {
+  opacity: 0.42;
+  filter: blur(0.5px) brightness(0.75);
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.step-current {
+  animation: step-ring-pulse 2.2s ease-in-out infinite;
+}
+@keyframes step-ring-pulse {
+  0%, 100% { box-shadow: 0 0 0 0   rgba(255,153,0,0.0); }
+  50%       { box-shadow: 0 0 0 4px rgba(255,153,0,0.35); }
+}
+
+.focus-zone {
+  transition: box-shadow 0.25s ease, filter 0.25s ease;
+  border-radius: 4px;
+}
+.focus-zone.focus-active {
+  position: relative;
+  z-index: 20;
+  box-shadow: 0 0 0 2px #ff9900, 0 0 18px rgba(255,153,0,0.35);
+  animation: focus-zone-pulse 2s ease-in-out infinite;
+}
+.focus-zone.focus-dimmed {
+  filter: blur(1.2px) brightness(0.6);
+  pointer-events: none;
+}
+@keyframes focus-zone-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px #ff9900, 0 0 12px rgba(255,153,0,0.25); }
+  50%       { box-shadow: 0 0 0 3px #ff9900, 0 0 28px rgba(255,153,0,0.5);  }
 }
 
 /* Custom Scrollbar */

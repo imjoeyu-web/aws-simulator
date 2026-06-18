@@ -1,22 +1,30 @@
 import React, { useState } from 'react';
 import { ChevronRight, ExternalLink } from 'lucide-react';
 
-const DEFAULT_POLICY = `{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "PublicReadGetObject",
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::BUCKET_NAME/*"
-    }
-  ]
-}`;
+
+function copyText(text) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const el = document.createElement('textarea');
+  el.value = text;
+  el.style.cssText = 'position:fixed;top:-9999px;left:-9999px';
+  document.body.appendChild(el);
+  el.focus();
+  el.select();
+  document.execCommand('copy');
+  document.body.removeChild(el);
+}
 
 export default function S3BucketDetail({ bucket, questState, onBack, onBucketUpdate }) {
   const [activeTab, setActiveTab] = useState('objects');
   const [policyJson, setPolicyJson] = useState(bucket.policyJson ?? '');
+  const [arnCopied, setArnCopied] = useState(false);
   const [hostingEnabled, setHostingEnabled] = useState(bucket.hostingEnabled ?? false);
   const [indexDoc, setIndexDoc] = useState(bucket.indexDoc ?? 'index.html');
   const [errorDoc, setErrorDoc] = useState(bucket.errorDoc ?? 'error.html');
@@ -31,7 +39,7 @@ export default function S3BucketDetail({ bucket, questState, onBack, onBucketUpd
   const stepId = questState.currentStep.id;
 
   const handleSavePolicy = () => {
-    if (policyJson.includes('s3:GetObject')) {
+    if (policyJson.includes('s3:GetObject') && policyJson.includes(bucket.name)) {
       setPolicySaved(true);
       onBucketUpdate?.({ ...bucket, policySaved: true, policyJson });
       if (stepId.includes('s3_policy')) questState.completeCurrentStep();
@@ -139,6 +147,7 @@ export default function S3BucketDetail({ bucket, questState, onBack, onBucketUpd
                   setErrorDocDraft(errorDoc);
                   setEditingHosting(true);
                 }}
+
               >
                 편집
               </button>
@@ -444,9 +453,14 @@ export default function S3BucketDetail({ bucket, questState, onBack, onBucketUpd
                 }}>
                   <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.3px' }}>버킷 ARN</span>
                   <code style={{ fontSize: '13px', color: '#16191f' }}>arn:aws:s3:::{bucket.name}</code>
-                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#0073bb', fontSize: '12px', padding: 0 }}
-                    onClick={() => navigator.clipboard?.writeText(`arn:aws:s3:::${bucket.name}`)}>
-                    복사
+                  <button
+                    style={{ background: arnCopied ? '#1d8102' : 'none', color: arnCopied ? '#fff' : '#0073bb', border: arnCopied ? 'none' : 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '12px', padding: arnCopied ? '1px 7px' : 0, transition: 'all 0.2s', fontWeight: 700 }}
+                    onClick={() => {
+                      copyText(`arn:aws:s3:::${bucket.name}`);
+                      setArnCopied(true);
+                      setTimeout(() => setArnCopied(false), 1500);
+                    }}>
+                    {arnCopied ? '복사됨!' : '복사'}
                   </button>
                 </div>
 

@@ -27,6 +27,9 @@ export default function S3Console({ questState, view, setView, buckets, setBucke
   }
 
   // ─── 버킷 목록 화면 ───
+  const isS3CreateStep = questState?.currentStep?.id?.includes('s3_create');
+  const PULSE = { animation: 'step-panel-pulse 1.5s ease-in-out infinite', outline: '2px solid #ff9900', outlineOffset: '3px' };
+
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%', paddingBottom: '40px' }}>
 
@@ -45,7 +48,7 @@ export default function S3Console({ questState, view, setView, buckets, setBucke
             <a href="#" className="aws-info-link" style={{ fontSize: '13px' }}>자세히 알아보기 <ExternalLink size={11} style={{ display: 'inline', verticalAlign: 'middle' }} /></a>
           </p>
         </div>
-        <button className="aws-btn-primary" onClick={() => setView('create')}>버킷 만들기</button>
+        <button className="aws-btn-primary" onClick={() => setView('create')} style={isS3CreateStep ? PULSE : {}}>버킷 만들기</button>
       </div>
 
       {/* 버킷 테이블 */}

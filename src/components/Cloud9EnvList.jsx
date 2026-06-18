@@ -84,7 +84,7 @@ export default function Cloud9EnvList({ env, questState, onNavigate, onBack }) {
                 alignItems: 'center',
                 gap: '6px',
                 color: 'var(--text-primary)',
-                ...(isOpenStep ? { borderColor: '#0073bb', color: '#0073bb', boxShadow: '0 0 0 1px #0073bb' } : {})
+                ...(isOpenStep ? { borderColor: '#ff9900', color: '#ff9900', animation: 'step-panel-pulse 1.5s ease-in-out infinite' } : {})
               }}
             >
               <Play size={13} fill="currentColor" />

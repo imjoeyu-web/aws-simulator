@@ -32,8 +32,9 @@ export default function Cloud9Console({ questState, onNavigate, view, setView, c
   }
 
   return (
-    <Cloud9Landing 
-      onCreateClick={() => setView('create')} 
+    <Cloud9Landing
+      onCreateClick={() => setView('create')}
+      questState={questState}
     />
   );
 }

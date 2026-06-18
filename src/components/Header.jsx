@@ -72,6 +72,9 @@ export default function Header({ currentService, onServiceSelect, questState }) 
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const currentStep = questState?.steps?.[questState?.currentStepIndex];
+  const isRegionStep = currentStep?.id?.includes('region') ?? false;
+
   const handleRegionSelect = (code) => {
     setSelectedRegion(code);
     setRegionOpen(false);
@@ -99,6 +102,12 @@ export default function Header({ currentService, onServiceSelect, questState }) 
       onServiceSelect('s3');
     } else if (term.includes('ec2')) {
       onServiceSelect('ec2');
+    } else if (term.includes('rds') || term.includes('relational') || term.includes('mysql')) {
+      onServiceSelect('rds');
+    } else if (term.includes('lambda')) {
+      onServiceSelect('lambda');
+    } else if (term.includes('api gateway') || term.includes('apigateway')) {
+      onServiceSelect('apigateway');
     }
     setSearchTerm('');
   };
@@ -158,9 +167,12 @@ export default function Header({ currentService, onServiceSelect, questState }) 
           <button
             onClick={() => setRegionOpen(v => !v)}
             style={{
-              background: 'transparent', border: 'none', color: '#ffffff',
+              background: 'transparent', color: '#ffffff',
               fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
-              padding: '4px 0'
+              border: isRegionStep ? '2px solid #ff9900' : 'none',
+              padding: isRegionStep ? '3px 8px' : '4px 0',
+              borderRadius: isRegionStep ? '6px' : '0',
+              animation: isRegionStep ? 'region-pulse 1.5s ease-in-out infinite' : 'none',
             }}
           >
             {getRegionDisplay(selectedRegion)}
