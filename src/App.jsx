@@ -132,7 +132,7 @@ function App() {
   const isHome = currentService === 'home' && introTutorialId === null;
   const isGameScreen = isHome || introTutorialId !== null;
   const currentTutorial = ALL_TUTORIALS.find(t => t.id === selectedTutorialId);
-  const isComplete = questState.isQuestComplete && questState.totalSteps > 0 && !isHome;
+  const isComplete = questState.isQuestComplete && questState.totalSteps > 0 && !isHome && introTutorialId === null;
   const nextTutorial = ALL_TUTORIALS.find(t => t.id === selectedTutorialId + 1);
 
   return (
@@ -227,7 +227,7 @@ function App() {
           completedSteps={questState.completedSteps}
           credits={questState.credits}
           nextTutorial={nextTutorial}
-          onNext={() => { setCurrentService('home'); handleShowIntro(nextTutorial.id); }}
+          onNext={() => { setSelectedTutorialId(nextTutorial.id); setCurrentService('home'); handleShowIntro(nextTutorial.id); }}
           onBack={() => { setCurrentService('home'); setShowOnboarding(false); }}
         />
       )}
