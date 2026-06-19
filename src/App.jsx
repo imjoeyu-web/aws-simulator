@@ -160,7 +160,11 @@ function App() {
           {isGameScreen && (
             <GameScreen>
               {currentService === 'home' && introTutorialId === null && showOnboarding && (
-                <CloudOnboarding onDone={() => setShowOnboarding(false)} />
+                <CloudOnboarding onDone={() => {
+                  setShowOnboarding(false);
+                  setCompletedTutorials([]);
+                  setSelectedTutorialId(1);
+                }} />
               )}
               {currentService === 'home' && introTutorialId === null && !showOnboarding && (
                 <TutorialHome
