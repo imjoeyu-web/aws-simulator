@@ -12,9 +12,9 @@ function makeEndpoint(dbName) {
 // ── 생성 폼 ──────────────────────────────────────────────
 function RDSCreateForm({ questState, onCreated, onBack }) {
   const [dbName, setDbName] = useState('');
-  const [engine, setEngine] = useState('mysql');
-  const [template, setTemplate] = useState('free');
-  const [publicAccess, setPublicAccess] = useState('yes');
+  const [engine, setEngine] = useState('aurora-mysql');
+  const [template, setTemplate] = useState('prod');
+  const [publicAccess, setPublicAccess] = useState('no');
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
