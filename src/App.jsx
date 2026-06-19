@@ -17,20 +17,40 @@ import { useQuestState, ALL_TUTORIALS } from './hooks/useQuestState';
 import BankruptModal from './components/BankruptModal';
 import MistakeToast from './components/MistakeToast';
 
-// 16:9 고정 래퍼 — 홈/인트로/미션 선택 화면에만 사용
+// 게임 화면 — 1600×900 기준으로 디자인하고 창 크기에 맞춰 통째로 scale
 function GameScreen({ children }) {
+  const wrapRef = useRef(null);
+  const [scale, setScale] = useState(1);
+
+  const BASE_W = 1600;
+  const BASE_H = 900;
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const update = () => {
+      const { width, height } = el.getBoundingClientRect();
+      const s = Math.min(width / BASE_W, height / BASE_H);
+      setScale(s);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   return (
-    <div style={{
+    <div ref={wrapRef} style={{
+      position: 'relative',
       width: '100%', height: '100%',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
       overflow: 'hidden',
     }}>
       <div style={{
-        position: 'relative',
-        width: '100%',
-        maxWidth: 'calc((100vh - 40px) * 16 / 9)',
-        aspectRatio: '16 / 9',
-        overflow: 'hidden',
+        position: 'absolute',
+        top: '50%', left: '50%',
+        width: BASE_W, height: BASE_H,
+        transform: `translate(-50%, -50%) scale(${scale})`,
+        transformOrigin: 'center center',
       }}>
         {children}
       </div>
@@ -136,7 +156,7 @@ function App() {
 
         <main className={`console-area${isGameScreen ? ' game-mode' : ''}`}>
 
-          {/* 홈/인트로/미션 선택 — 16:9 고정 */}
+          {/* 홈/인트로/미션 선택 — scale 고정 */}
           {isGameScreen && (
             <GameScreen>
               {currentService === 'home' && introTutorialId === null && showOnboarding && (
@@ -146,6 +166,7 @@ function App() {
                 <TutorialHome
                   completedTutorials={completedTutorials}
                   onStart={handleShowIntro}
+                  onHome={() => setShowOnboarding(true)}
                 />
               )}
               {introTutorialId !== null && (
@@ -206,7 +227,7 @@ function App() {
           completedSteps={questState.completedSteps}
           credits={questState.credits}
           nextTutorial={nextTutorial}
-          onNext={() => { questState.reset(); setSelectedTutorialId(nextTutorial.id); setCurrentService('home'); setIntroTutorialId(nextTutorial.id); }}
+          onNext={() => { setCurrentService('home'); handleShowIntro(nextTutorial.id); }}
           onBack={() => { setCurrentService('home'); setShowOnboarding(false); }}
         />
       )}

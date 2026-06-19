@@ -126,9 +126,10 @@ function MissionCard({ mission, status, isRecommended, onClick }) {
   );
 }
 
-export default function TutorialHome({ completedTutorials, onStart }) {
-  // 추천 미션 = 완료 안 된 것 중 가장 빠른 것
+export default function TutorialHome({ completedTutorials, onStart, onHome }) {
   const recommendedId = MISSIONS.find(m => !completedTutorials.includes(m.id))?.id;
+  const allDone = MISSIONS.every(m => completedTutorials.includes(m.id));
+  const [showMissions, setShowMissions] = useState(false);
 
   const getStatus = (id) => {
     if (completedTutorials.includes(id)) return 'done';
@@ -136,16 +137,56 @@ export default function TutorialHome({ completedTutorials, onStart }) {
     return 'open';
   };
 
+  // 3개 다 클리어 → 엔딩 화면
+  if (allDone && !showMissions) {
+    return (
+      <div style={{ position: 'absolute', inset: 0, userSelect: 'none', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+        <img
+          src="/bgi_ending.png"
+          alt="엔딩 — 글로벌 만두 제국"
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.35) 100%)' }} />
+        <div style={{
+          position: 'absolute', bottom: 'clamp(28px, 5vh, 60px)', left: '50%', transform: 'translateX(-50%)',
+          display: 'flex', gap: '14px', zIndex: 2,
+        }}>
+          <button
+            onClick={onHome}
+            style={{
+              background: 'linear-gradient(90deg, #ff9900, #ff7700)', color: '#fff',
+              border: '3px solid #fff', borderRadius: '14px',
+              padding: 'clamp(12px, 2vh, 18px) clamp(24px, 3vw, 40px)',
+              fontSize: 'clamp(15px, 2.2vh, 20px)', fontWeight: 900, cursor: 'pointer',
+              boxShadow: '0 5px 0 #c47a00, 0 8px 20px rgba(0,0,0,0.3)',
+            }}
+          >
+            🏠 처음으로
+          </button>
+          <button
+            onClick={() => setShowMissions(true)}
+            style={{
+              background: 'rgba(255,255,255,0.95)', color: '#7a4a20',
+              border: '3px solid #e0c89a', borderRadius: '14px',
+              padding: 'clamp(12px, 2vh, 18px) clamp(20px, 2.5vw, 32px)',
+              fontSize: 'clamp(14px, 2vh, 18px)', fontWeight: 800, cursor: 'pointer',
+              boxShadow: '0 5px 0 rgba(0,0,0,0.15)',
+            }}
+          >
+            미션 다시 보기
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ position: 'absolute', inset: 0, userSelect: 'none' }}>
-      {/* 배경 (입간판 제거된 버전) */}
       <img
         src="/bgi_clean.png"
         alt="미션 선택 배경"
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
       />
-
-      {/* 미션 카드 3개 — 오른쪽 거리 위에 (예전 입간판 자리) */}
       <div style={{
         position: 'absolute',
         right: 'clamp(20px, 4vw, 70px)',
@@ -164,8 +205,6 @@ export default function TutorialHome({ completedTutorials, onStart }) {
           />
         ))}
       </div>
-
-      {/* 하단 진행도 */}
       <div style={{
         position: 'absolute', bottom: '4%', left: 'clamp(16px, 4vw, 60px)',
         background: 'rgba(0,0,0,0.6)', borderRadius: '20px', padding: '8px 20px',
