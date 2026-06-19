@@ -5,6 +5,7 @@ import Cloud9Console from './components/Cloud9Console';
 import S3Console from './components/S3Console';
 import RDSConsole from './components/RDSConsole';
 import EC2Console from './components/EC2Console';
+import LambdaConsole from './components/LambdaConsole';
 import VirtualTerminal from './components/VirtualTerminal';
 import TutorialHome from './components/TutorialHome';
 import TutorialIntro from './components/TutorialIntro';
@@ -181,6 +182,9 @@ function App() {
           )}
           {currentService === 'ec2' && (
             <EC2Console questState={questState} onNavigate={setCurrentService} />
+          )}
+          {currentService === 'lambda' && (
+            <LambdaConsole questState={questState} />
           )}
           {currentService === 'terminal' && (
             <VirtualTerminal questState={questState} onNavigate={setCurrentService} s3Buckets={s3Buckets} />

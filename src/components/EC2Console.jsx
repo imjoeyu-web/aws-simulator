@@ -2,22 +2,47 @@ import { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 
 const PULSE = { animation: 'step-panel-pulse 1.5s ease-in-out infinite', outline: '2px solid #ff9900', outlineOffset: '3px' };
-
 const SG_ID = 'sg-0ca0a81e2878d7541';
 const SG_NAME = 'default';
 
-function InboundRuleEditor({ questState, onSaved, onCancel }) {
-  const isSgStep = questState?.currentStep?.id?.includes('sg_rds');
+// 현재 스텝에 맞는 보안그룹 규칙 정보 반환
+function getSgStepInfo(questState) {
+  const id = questState?.currentStep?.id ?? '';
+  if (id.includes('sg_rds')) {
+    return { active: true, type: 'MYSQL/Aurora', port: '3306', hint: 'MYSQL/Aurora (포트 3306, 소스 0.0.0.0/0) 규칙이 추가되었습니다.' };
+  }
+  if (id.includes('sg_ec2')) {
+    const isT2 = id.startsWith('t2_');
+    const type = isT2 ? '사용자 지정 TCP' : 'HTTP';
+    const port = isT2 ? '8080' : '80';
+    return { active: true, type, port, hint: `${type} (포트 ${port}, 소스 0.0.0.0/0) 규칙이 추가되었습니다.` };
+  }
+  return { active: false, type: 'SSH', port: '22', hint: '' };
+}
 
-  const [rules, setRules] = useState([
+// ── 인바운드 규칙 편집 ────────────────────────────────────
+function InboundRuleEditor({ questState, onSaved, onCancel }) {
+  const sgInfo = getSgStepInfo(questState);
+
+  const [existingRules, setExistingRules] = useState([
     { id: 1, type: 'SSH', protocol: 'TCP', port: '22', source: '0.0.0.0/0', desc: '' },
   ]);
-  const [newRule, setNewRule] = useState({ type: 'MYSQL/Aurora', protocol: 'TCP', port: '3306', source: '0.0.0.0/0', desc: '' });
+  const [newRule, setNewRule] = useState({
+    type: sgInfo.active ? sgInfo.type : 'SSH',
+    protocol: 'TCP',
+    port: sgInfo.active ? sgInfo.port : '22',
+    source: '0.0.0.0/0',
+    desc: '',
+  });
+
+  const handleTypeChange = (t) => {
+    const portMap = { 'MYSQL/Aurora': '3306', 'SSH': '22', 'HTTP': '80', 'HTTPS': '443', 'RDP': '3389' };
+    setNewRule(prev => ({ ...prev, type: t, port: portMap[t] ?? prev.port }));
+  };
 
   const handleSave = () => {
-    const saved = [...rules, { ...newRule, id: 2 }];
-    if (isSgStep) questState.completeCurrentStep();
-    onSaved(saved);
+    if (sgInfo.active) questState.completeCurrentStep?.();
+    onSaved([...existingRules, { ...newRule, id: 2 }]);
   };
 
   return (
@@ -29,78 +54,67 @@ function InboundRuleEditor({ questState, onSaved, onCancel }) {
         <ChevronRight size={14} color="var(--text-secondary)" />
         <span style={{ color: 'var(--text-secondary)' }}>인바운드 규칙 편집</span>
       </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 600 }}>인바운드 규칙 편집</h1>
-      </div>
-
+      <h1 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '8px' }}>인바운드 규칙 편집</h1>
       <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
         보안 그룹: <strong>{SG_NAME}</strong> ({SG_ID})
       </div>
 
-      <div className={`aws-panel ${isSgStep ? 'success-glow' : ''}`} style={{ padding: 0, marginBottom: '20px' }}>
-        {/* 헤더 */}
+      <div className={`aws-panel ${sgInfo.active ? 'success-glow' : ''}`} style={{ padding: 0, marginBottom: '20px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 2fr 2fr auto', padding: '10px 16px', background: '#fafafa', borderBottom: '1px solid var(--border-light)', fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)' }}>
           <span>유형</span><span>프로토콜</span><span>포트 범위</span><span>소스</span><span>설명 - 선택 사항</span><span></span>
         </div>
 
-        {/* 기존 규칙 */}
-        {rules.map(r => (
+        {existingRules.map(r => (
           <div key={r.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 2fr 2fr auto', padding: '10px 16px', borderBottom: '1px solid var(--border-light)', alignItems: 'center', gap: '8px' }}>
-            <div className="aws-input" style={{ padding: '5px 10px', fontSize: '13px', background: '#f0f0f0', color: 'var(--text-secondary)' }}>{r.type}</div>
+            <div style={{ padding: '5px 10px', fontSize: '13px', background: '#f0f0f0', color: 'var(--text-secondary)', border: '1px solid var(--border-light)', borderRadius: '2px' }}>{r.type}</div>
             <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{r.protocol}</div>
             <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{r.port}</div>
-            <div className="aws-input" style={{ padding: '5px 10px', fontSize: '13px', background: '#f0f0f0', color: 'var(--text-secondary)' }}>{r.source}</div>
-            <div className="aws-input" style={{ padding: '5px 10px', fontSize: '13px', background: '#f0f0f0', color: 'var(--text-secondary)' }}>{r.desc || '—'}</div>
-            <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d13212', fontSize: '18px', lineHeight: 1 }} onClick={() => setRules(prev => prev.filter(x => x.id !== r.id))}>×</button>
+            <div style={{ padding: '5px 10px', fontSize: '13px', background: '#f0f0f0', color: 'var(--text-secondary)', border: '1px solid var(--border-light)', borderRadius: '2px' }}>{r.source}</div>
+            <div style={{ padding: '5px 10px', fontSize: '13px', background: '#f0f0f0', color: 'var(--text-secondary)', border: '1px solid var(--border-light)', borderRadius: '2px' }}>{r.desc || '—'}</div>
+            <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d13212', fontSize: '18px' }} onClick={() => setExistingRules(prev => prev.filter(x => x.id !== r.id))}>×</button>
           </div>
         ))}
 
-        {/* 새 규칙 */}
+        {/* 새 규칙 행 */}
         <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 2fr 2fr auto', padding: '10px 16px', alignItems: 'center', gap: '8px', background: '#fffbf0', borderBottom: '1px solid var(--border-light)' }}>
-          <select className="aws-input" value={newRule.type} onChange={e => {
-            const t = e.target.value;
-            const port = t === 'MYSQL/Aurora' ? '3306' : t === 'SSH' ? '22' : t === 'HTTP' ? '80' : t === 'HTTPS' ? '443' : '';
-            setNewRule(prev => ({ ...prev, type: t, port }));
-          }} style={{ fontSize: '13px', padding: '5px 10px', appearance: 'auto' }}>
+          <select className="aws-input" value={newRule.type} onChange={e => handleTypeChange(e.target.value)} style={{ fontSize: '13px', padding: '5px 10px', appearance: 'auto' }}>
             <option>MYSQL/Aurora</option>
             <option>SSH</option>
             <option>HTTP</option>
             <option>HTTPS</option>
+            <option>RDP</option>
             <option>사용자 지정 TCP</option>
             <option>모든 트래픽</option>
           </select>
           <div style={{ fontSize: '13px', color: 'var(--text-secondary)', padding: '5px 0' }}>TCP</div>
-          <input className="aws-input" value={newRule.port} onChange={e => setNewRule(prev => ({ ...prev, port: e.target.value }))} style={{ fontSize: '13px', padding: '5px 10px' }} />
-          <input className="aws-input" value={newRule.source} onChange={e => setNewRule(prev => ({ ...prev, source: e.target.value }))} style={{ fontSize: '13px', padding: '5px 10px' }} placeholder="0.0.0.0/0" />
-          <input className="aws-input" value={newRule.desc} onChange={e => setNewRule(prev => ({ ...prev, desc: e.target.value }))} style={{ fontSize: '13px', padding: '5px 10px' }} placeholder="설명" />
-          <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d13212', fontSize: '18px', lineHeight: 1 }} onClick={() => setNewRule({ type: 'MYSQL/Aurora', protocol: 'TCP', port: '3306', source: '0.0.0.0/0', desc: '' })}>×</button>
+          <input className="aws-input" value={newRule.port} onChange={e => setNewRule(p => ({ ...p, port: e.target.value }))} style={{ fontSize: '13px', padding: '5px 10px' }} />
+          <input className="aws-input" value={newRule.source} onChange={e => setNewRule(p => ({ ...p, source: e.target.value }))} style={{ fontSize: '13px', padding: '5px 10px' }} placeholder="0.0.0.0/0" />
+          <input className="aws-input" value={newRule.desc} onChange={e => setNewRule(p => ({ ...p, desc: e.target.value }))} style={{ fontSize: '13px', padding: '5px 10px' }} placeholder="설명" />
+          <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d13212', fontSize: '18px' }} onClick={() => setNewRule({ type: sgInfo.active ? sgInfo.type : 'SSH', protocol: 'TCP', port: sgInfo.active ? sgInfo.port : '22', source: '0.0.0.0/0', desc: '' })}>×</button>
         </div>
 
         <div style={{ padding: '12px 16px' }}>
-          <button className="aws-info-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => {}}>
-            + 규칙 추가
-          </button>
+          <button className="aws-info-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px' }}>+ 규칙 추가</button>
         </div>
       </div>
 
-      {isSgStep && (
+      {sgInfo.active && (
         <div style={{ marginBottom: '16px', padding: '12px 16px', background: '#f1f8fa', border: '1px solid #0073bb', borderRadius: '4px', fontSize: '13px', color: '#0073bb' }}>
-          💡 퀘스트: MYSQL/Aurora (포트 3306, 소스 0.0.0.0/0) 규칙이 추가되었습니다. <strong>규칙 저장</strong> 버튼을 눌러 완료하세요.
+          💡 퀘스트: {sgInfo.hint} <strong>규칙 저장</strong> 버튼을 눌러 완료하세요.
         </div>
       )}
 
       <div style={{ display: 'flex', gap: '12px' }}>
-        <button className="aws-btn-primary" onClick={handleSave} style={isSgStep ? PULSE : {}}>규칙 저장</button>
+        <button className="aws-btn-primary" onClick={handleSave} style={sgInfo.active ? PULSE : {}}>규칙 저장</button>
         <button className="aws-input" style={{ width: 'auto', background: '#fff', padding: '8px 16px', fontSize: '13px' }} onClick={onCancel}>취소</button>
       </div>
     </div>
   );
 }
 
+// ── 보안 그룹 상세 ────────────────────────────────────────
 function SecurityGroupDetail({ questState, savedRules, onEditInbound, onBack }) {
-  const isSgStep = questState?.currentStep?.id?.includes('sg_rds');
-
+  const sgInfo = getSgStepInfo(questState);
   const inboundRules = savedRules ?? [
     { type: 'SSH', protocol: 'TCP', port: '22', source: '0.0.0.0/0', desc: '' },
   ];
@@ -108,18 +122,15 @@ function SecurityGroupDetail({ questState, savedRules, onEditInbound, onBack }) 
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%', paddingBottom: '40px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', marginBottom: '16px' }}>
-        <a href="#" className="aws-info-link" onClick={e => { e.preventDefault(); onBack('list'); }}>EC2</a>
+        <a href="#" className="aws-info-link" onClick={e => { e.preventDefault(); onBack('sg-list'); }}>EC2</a>
         <ChevronRight size={14} color="var(--text-secondary)" />
-        <a href="#" className="aws-info-link" onClick={e => { e.preventDefault(); onBack('list'); }}>보안 그룹</a>
+        <a href="#" className="aws-info-link" onClick={e => { e.preventDefault(); onBack('sg-list'); }}>보안 그룹</a>
         <ChevronRight size={14} color="var(--text-secondary)" />
         <span style={{ color: 'var(--text-secondary)' }}>{SG_NAME}</span>
       </div>
-
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 600 }}>{SG_NAME}</h1>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="aws-input" style={{ width: 'auto', background: '#fff', padding: '6px 14px', fontSize: '13px' }}>작업 ▼</button>
-        </div>
+        <button className="aws-input" style={{ width: 'auto', background: '#fff', padding: '6px 14px', fontSize: '13px' }}>작업 ▼</button>
       </div>
 
       <div className="aws-panel" style={{ marginBottom: '16px' }}>
@@ -134,8 +145,7 @@ function SecurityGroupDetail({ questState, savedRules, onEditInbound, onBack }) 
         </div>
       </div>
 
-      {/* 탭 */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--border-light)', marginBottom: '0' }}>
+      <div style={{ display: 'flex', borderBottom: '1px solid var(--border-light)' }}>
         {['인바운드 규칙', '아웃바운드 규칙', '태그'].map(tab => (
           <button key={tab} style={{ padding: '8px 16px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '13px', fontWeight: tab === '인바운드 규칙' ? 700 : 400, borderBottom: tab === '인바운드 규칙' ? '3px solid #0073bb' : '3px solid transparent', color: tab === '인바운드 규칙' ? '#0073bb' : 'var(--text-primary)' }}>
             {tab}
@@ -143,12 +153,11 @@ function SecurityGroupDetail({ questState, savedRules, onEditInbound, onBack }) 
         ))}
       </div>
 
-      <div className={`aws-panel ${isSgStep && !savedRules ? 'success-glow' : ''}`} style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
+      <div className={`aws-panel ${sgInfo.active && !savedRules ? 'success-glow' : ''}`} style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
           <h3 style={{ fontSize: '15px', fontWeight: 700 }}>인바운드 규칙</h3>
-          <button className="aws-btn-primary" onClick={onEditInbound} style={isSgStep && !savedRules ? PULSE : {}}>인바운드 규칙 편집</button>
+          <button className="aws-btn-primary" onClick={onEditInbound} style={sgInfo.active && !savedRules ? PULSE : {}}>인바운드 규칙 편집</button>
         </div>
-
         <div style={{ border: '1px solid var(--border-light)', borderRadius: '4px', overflow: 'hidden' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 2fr 2fr', padding: '8px 16px', background: '#fafafa', borderBottom: '1px solid var(--border-light)', fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>
             <span>유형</span><span>프로토콜</span><span>포트 범위</span><span>소스</span><span>설명</span>
@@ -168,8 +177,9 @@ function SecurityGroupDetail({ questState, savedRules, onEditInbound, onBack }) 
   );
 }
 
+// ── 보안 그룹 목록 ────────────────────────────────────────
 function SecurityGroupList({ questState, onSelectSg }) {
-  const isSgStep = questState?.currentStep?.id?.includes('sg_rds');
+  const sgInfo = getSgStepInfo(questState);
 
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%', paddingBottom: '40px' }}>
@@ -178,7 +188,6 @@ function SecurityGroupList({ questState, onSelectSg }) {
         <ChevronRight size={13} color="var(--text-secondary)" style={{ display: 'inline', verticalAlign: 'middle', margin: '0 4px' }} />
         <span style={{ color: 'var(--text-secondary)' }}>보안 그룹</span>
       </div>
-
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 600 }}>보안 그룹</h1>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -192,8 +201,8 @@ function SecurityGroupList({ questState, onSelectSg }) {
           <span></span><span>보안 그룹 ID ▲</span><span>보안 그룹 이름</span><span>설명</span><span>VPC ID</span><span>소유자</span>
         </div>
         <div
-          style={{ display: 'grid', gridTemplateColumns: '32px 2fr 2fr 2fr 2fr 2fr', padding: '12px 16px', borderBottom: '1px solid var(--border-light)', alignItems: 'center', cursor: 'pointer', background: isSgStep ? '#fffbf0' : '#fff', outline: isSgStep ? '2px solid #ff9900' : 'none' }}
-          onClick={() => onSelectSg()}
+          style={{ display: 'grid', gridTemplateColumns: '32px 2fr 2fr 2fr 2fr 2fr', padding: '12px 16px', borderBottom: '1px solid var(--border-light)', alignItems: 'center', cursor: 'pointer', background: sgInfo.active ? '#fffbf0' : '#fff', outline: sgInfo.active ? '2px solid #ff9900' : 'none' }}
+          onClick={onSelectSg}
         >
           <input type="radio" readOnly />
           <a className="aws-info-link" style={{ fontWeight: 600, fontSize: '13px' }}>{SG_ID}</a>
@@ -204,7 +213,7 @@ function SecurityGroupList({ questState, onSelectSg }) {
         </div>
       </div>
 
-      {isSgStep && (
+      {sgInfo.active && (
         <div style={{ marginTop: '16px', padding: '12px 16px', background: '#f1f8fa', border: '1px solid #0073bb', borderRadius: '4px', fontSize: '13px', color: '#0073bb' }}>
           💡 퀘스트: <strong>default</strong> 보안 그룹을 클릭하여 인바운드 규칙을 편집하세요.
         </div>
@@ -213,6 +222,7 @@ function SecurityGroupList({ questState, onSelectSg }) {
   );
 }
 
+// ── 메인 ──────────────────────────────────────────────────
 export default function EC2Console({ questState, onNavigate }) {
   const [view, setView] = useState('sg-list');
   const [savedRules, setSavedRules] = useState(null);
@@ -236,7 +246,6 @@ export default function EC2Console({ questState, onNavigate }) {
       />
     );
   }
-
   return (
     <SecurityGroupList
       questState={questState}
