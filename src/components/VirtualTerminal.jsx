@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Terminal } from 'lucide-react';
 
 export default function VirtualTerminal({ questState, onNavigate, s3Buckets = [] }) {
@@ -39,14 +39,37 @@ export default function VirtualTerminal({ questState, onNavigate, s3Buckets = []
       return;
     }
 
+    const isTerminalStep = questState?.currentStep?.service === 'terminal';
+    const mistake = () => setTimeout(() => questState.triggerMistake?.('terminal_wrong_cmd'), 400);
+
     if (cmd.startsWith('git clone')) {
-      newLogs.push({ type: 'output', text: 'Cloning into \'Nxt-Classic-Architecture\'...' });
-      newLogs.push({ type: 'output', text: 'remote: Enumerating objects: 84, done.' });
-      newLogs.push({ type: 'output', text: 'remote: Counting objects: 100% (84/84), done.' });
-      newLogs.push({ type: 'output', text: 'Receiving objects: 100% (84/84), 1.23 MiB | 5.20 MiB/s, done.' });
-      newLogs.push({ type: 'output', text: 'Resolving deltas: 100% (42/42), done.' });
-      if (currentStepId.includes('clone') && cmd.includes('nxtcloud-org/Nxt-Classic-Architecture.git')) {
-        setTimeout(() => questState.completeCurrentStep(), 500);
+      let urlPart = cmd.slice('git clone'.length).trim();
+      if ((urlPart.startsWith("'") && urlPart.endsWith("'")) ||
+          (urlPart.startsWith('"') && urlPart.endsWith('"'))) {
+        urlPart = urlPart.slice(1, -1);
+      }
+      const CORRECT_URL = 'https://github.com/nxtcloud-org/Nxt-Classic-Architecture.git';
+      const isCorrectUrl = urlPart === CORRECT_URL;
+
+      if (currentStepId.includes('clone') && !isCorrectUrl) {
+        newLogs.push({ type: 'error', text: `fatal: repository '${urlPart}' not found` });
+        const hasQuote = /['"`]/.test(urlPart);
+        newLogs.push({ type: 'error', text: hasQuote
+          ? '⚠ URL에 따옴표나 백틱이 섞여 있어요. URL만 정확히 입력해요.'
+          : '⚠ URL을 끝까지 정확히 입력했는지 확인해요. 오탈자가 없나요?'
+        });
+        mistake();
+      } else {
+        newLogs.push({ type: 'output', text: 'Cloning into \'Nxt-Classic-Architecture\'...' });
+        newLogs.push({ type: 'output', text: 'remote: Enumerating objects: 84, done.' });
+        newLogs.push({ type: 'output', text: 'remote: Counting objects: 100% (84/84), done.' });
+        newLogs.push({ type: 'output', text: 'Receiving objects: 100% (84/84), 1.23 MiB | 5.20 MiB/s, done.' });
+        newLogs.push({ type: 'output', text: 'Resolving deltas: 100% (42/42), done.' });
+        if (currentStepId.includes('clone') && isCorrectUrl) {
+          setTimeout(() => questState.completeCurrentStep(), 500);
+        } else if (isTerminalStep && !currentStepId.includes('clone')) {
+          mistake();
+        }
       }
     }
     else if (cmd.startsWith('cd ')) {
@@ -63,6 +86,10 @@ export default function VirtualTerminal({ questState, onNavigate, s3Buckets = []
         setCurrentPath('~/environment/Nxt-Classic-Architecture/3.AITextApp/client');
         setInGitRepo(true);
         if (currentStepId.includes('_cd')) setTimeout(() => questState.completeCurrentStep(), 300);
+      } else if (target.includes('server')) {
+        setCurrentPath('~/environment/Nxt-Classic-Architecture/2.RandomTextApp/server');
+        setInGitRepo(true);
+        if (currentStepId.includes('cd_server')) setTimeout(() => questState.completeCurrentStep(), 300);
       } else if (target === '..') {
         setCurrentPath(prev => prev.split('/').slice(0, -1).join('/') || '~');
       } else {
@@ -79,6 +106,8 @@ export default function VirtualTerminal({ questState, onNavigate, s3Buckets = []
       newLogs.push({ type: 'output', text: 'found 0 vulnerabilities' });
       if (currentStepId.includes('npm_install')) {
         setTimeout(() => questState.completeCurrentStep(), 500);
+      } else if (isTerminalStep) {
+        mistake();
       }
     }
     else if (cmd === 'npm run build') {
@@ -95,19 +124,22 @@ export default function VirtualTerminal({ questState, onNavigate, s3Buckets = []
       newLogs.push({ type: 'output', text: '' });
       newLogs.push({ type: 'output', text: 'Find out more about deployment here:' });
       newLogs.push({ type: 'link', text: '  https://cra.link/deployment' });
-      if (currentStepId.includes('npm_build')) {
+      if (currentStepId.includes('npm_build') || currentStepId.includes('rebuild')) {
         setTimeout(() => questState.completeCurrentStep(), 500);
+      } else if (isTerminalStep) {
+        mistake();
       }
     }
     else if (cmd.startsWith('aws s3 cp build s3://')) {
       const bucketPart = cmd.split('s3://')[1]?.split(' ')[0] || '';
-
       if (!bucketPart || bucketPart.startsWith('<')) {
         newLogs.push({ type: 'error', text: '오류: <버킷명> 부분을 실제 S3 버킷 이름으로 바꿔서 입력하세요.' });
         newLogs.push({ type: 'error', text: '예시) aws s3 cp build s3://my-bucket-name --recursive' });
+        if (isTerminalStep) mistake();
       } else if (!s3Buckets.some(b => b.name === bucketPart)) {
         newLogs.push({ type: 'error', text: `An error occurred (NoSuchBucket) when calling the PutObject operation: The specified bucket does not exist` });
         newLogs.push({ type: 'error', text: `⚠ S3에서 버킷을 먼저 생성하거나 이름을 정확히 확인하세요.` });
+        if (isTerminalStep) mistake();
       } else {
         newLogs.push({ type: 'output', text: `upload: build/index.html to s3://${bucketPart}/index.html` });
         newLogs.push({ type: 'output', text: `upload: build/asset-manifest.json to s3://${bucketPart}/asset-manifest.json` });
@@ -116,11 +148,13 @@ export default function VirtualTerminal({ questState, onNavigate, s3Buckets = []
         newLogs.push({ type: 'output', text: `upload: build/static/media/profile.png to s3://${bucketPart}/static/media/profile.png` });
         if (currentStepId.includes('s3_cp')) {
           setTimeout(() => questState.completeCurrentStep(), 1500);
+        } else if (isTerminalStep) {
+          mistake();
         }
       }
     }
     else if (cmd === 'ls' || cmd === 'ls -la') {
-      if (currentPath.includes('3.Resume') || currentPath.includes('client')) {
+      if (currentPath.includes('3.Resume') || currentPath.includes('client') || currentPath.includes('server')) {
         newLogs.push({ type: 'output', text: 'build  node_modules  package.json  public  README.md  src  .env' });
       } else if (currentPath === '~') {
         newLogs.push({ type: 'output', text: 'Nxt-Classic-Architecture' });
@@ -139,6 +173,7 @@ export default function VirtualTerminal({ questState, onNavigate, s3Buckets = []
     }
     else {
       newLogs.push({ type: 'error', text: `bash: ${cmd.split(' ')[0]}: command not found` });
+      if (isTerminalStep) mistake();
     }
 
     setLogs(newLogs);

@@ -24,7 +24,22 @@ function RDSCreateForm({ questState, onCreated, onBack }) {
   const handleCreate = (e) => {
     e.preventDefault();
     if (!dbName || !password) return;
-    if (isCreateStep) questState.completeCurrentStep();
+
+    if (isCreateStep) {
+      const isMySQL = engine === 'mysql';
+      const isFree = template === 'free';
+      const isPublic = publicAccess === 'yes';
+
+      if (!isMySQL) {
+        questState.triggerMistake?.('rds_wrong_engine');
+      } else if (!isFree) {
+        questState.triggerMistake?.('rds_not_free_tier');
+      } else if (!isPublic) {
+        questState.triggerMistake?.('rds_not_public');
+      } else {
+        questState.completeCurrentStep();
+      }
+    }
     onCreated({ name: dbName, engine, username, endpoint: makeEndpoint(dbName) });
   };
 
@@ -202,33 +217,80 @@ function RDSCreateForm({ questState, onCreated, onBack }) {
             <span>ℹ️</span><span>데이터베이스를 생성한 후에는 VPC를 변경할 수 없습니다.</span>
           </div>
 
-          <div style={{ marginBottom: '16px' }}>
+          <div style={{ marginBottom: '20px' }}>
             <label className="aws-label" style={{ marginBottom: '4px', display: 'block' }}>DB 서브넷 그룹 <span className="aws-info-link" style={{ fontSize: '12px' }}>정보</span></label>
             <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>DB 서브넷 그룹을 선택합니다. DB 서브넷 그룹은 선택한 VPC에서 DB 클러스터가 어떤 서브넷과 IP 범위를 사용할 수 있는지를 정의합니다.</p>
-            <select className="aws-input" style={{ maxWidth: '500px', appearance: 'auto' }}>
-              <option>default-vpc-026e429eb34e47fb8 (6 서브넷, 6 가용 영역)</option>
+            <select className="aws-input" style={{ maxWidth: '600px', appearance: 'auto' }}>
+              <option>default-vpc-026e429eb34e47fb8</option>
             </select>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>11 서브넷, 6 가용 영역</p>
           </div>
 
-          <div>
+          {/* 퍼블릭 액세스 */}
+          <div style={{ marginBottom: '20px' }}>
             <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
               <label className="aws-label">퍼블릭 액세스</label>
               <span className="aws-info-link" style={{ fontSize: '12px' }}>정보</span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', maxWidth: '700px' }}>
+            {[
+              { id: 'yes', label: '예', desc: 'RDS는 클러스터에 퍼블릭 IP 주소를 할당합니다. VPC 외부의 Amazon EC2 인스턴스 및 다른 리소스가 클러스터에 연결할 수 있습니다. VPC 내부의 리소스도 클러스터에 연결할 수 있습니다. 클러스터에 연결할 수 있는 리소스를 지정하는 VPC 보안 그룹을 하나 이상 선택합니다.' },
+              { id: 'no', label: '아니요', desc: 'RDS는 클러스터에 퍼블릭 IP 주소를 할당하지 않습니다. VPC 내부의 Amazon EC2 인스턴스 및 다른 리소스만 클러스터에 연결할 수 있습니다. 클러스터에 연결할 수 있는 리소스를 지정하는 VPC 보안 그룹을 하나 이상 선택합니다.' },
+            ].map(o => (
+              <label key={o.id} onClick={() => setPublicAccess(o.id)} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', marginBottom: '12px' }}>
+                <input type="radio" checked={publicAccess === o.id} onChange={() => setPublicAccess(o.id)} style={{ marginTop: '3px', flexShrink: 0, accentColor: '#0073bb' }} />
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '14px', marginBottom: '4px' }}>{o.label}</div>
+                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6, maxWidth: '700px' }}>{o.desc}</div>
+                </div>
+              </label>
+            ))}
+          </div>
+
+          {/* VPC 보안 그룹 */}
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
+              <label className="aws-label">VPC 보안 그룹(방화벽)</label>
+              <span className="aws-info-link" style={{ fontSize: '12px' }}>정보</span>
+            </div>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>데이터베이스에 대한 액세스를 허용할 VPC 보안 그룹을 하나 이상 선택합니다. 보안 그룹 규칙이 적절한 수신 트래픽을 허용하는지 확인합니다.</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', maxWidth: '700px', marginBottom: '16px' }}>
               {[
-                { id: 'yes', label: '예', desc: 'RDS는 클러스터에 퍼블릭 IP 주소를 할당합니다. VPC 외부의 Amazon EC2 인스턴스 및 다른 리소스가 클러스터에 연결할 수 있습니다.' },
-                { id: 'no', label: '아니요', desc: 'RDS는 클러스터에 퍼블릭 IP 주소를 할당하지 않습니다. VPC 내부의 Amazon EC2 인스턴스 및 다른 리소스만 클러스터에 연결할 수 있습니다.' },
+                { id: 'existing', label: '기존 항목 선택', sub: '기존 VPC 보안 그룹 선택' },
+                { id: 'new', label: '새로 생성', sub: '새 VPC 보안 그룹 생성' },
               ].map(o => (
-                <label key={o.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', padding: '14px', border: `1px solid ${publicAccess === o.id ? '#0073bb' : 'var(--border-light)'}`, borderRadius: '4px', background: publicAccess === o.id ? '#f0f7ff' : '#fff' }} onClick={() => setPublicAccess(o.id)}>
-                  <input type="radio" checked={publicAccess === o.id} readOnly style={{ marginTop: '3px', flexShrink: 0 }} />
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: '14px', marginBottom: '4px' }}>{o.label}</div>
-                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{o.desc}</div>
+                <label key={o.id} className={`aws-radio-box ${o.id === 'existing' ? 'selected' : ''}`} style={{ cursor: 'pointer', opacity: o.id === 'new' ? 0.6 : 1 }}>
+                  <div className="aws-radio-header">
+                    <input type="radio" className="aws-radio-input" checked={o.id === 'existing'} readOnly />
+                    <div>
+                      <div style={{ fontWeight: 700 }}>{o.label}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>{o.sub}</div>
+                    </div>
                   </div>
                 </label>
               ))}
             </div>
+            <label className="aws-label" style={{ display: 'block', marginBottom: '6px' }}>기존 VPC 보안 그룹</label>
+            <select className="aws-input" style={{ maxWidth: '600px', appearance: 'auto', marginBottom: '8px' }}>
+              <option>하나 이상의 옵션 선택</option>
+              <option>default (sg-0ca0a81e2878d7541)</option>
+            </select>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#f0f0f0', border: '1px solid #ccc', borderRadius: '4px', padding: '4px 10px', fontSize: '13px', fontWeight: 600 }}>
+              default <span style={{ cursor: 'pointer', color: '#666' }}>×</span>
+            </div>
+          </div>
+
+          {/* 인증 기관 */}
+          <div>
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
+              <label className="aws-label">인증 기관 – <em style={{ fontWeight: 400 }}>선택 사항</em></label>
+              <span className="aws-info-link" style={{ fontSize: '12px' }}>정보</span>
+            </div>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px' }}>서버 인증서를 사용하면 Amazon 데이터베이스에 대한 연결이 이루어지고 있는지 검증하여 추가 보안 계층을 제공합니다.</p>
+            <select className="aws-input" style={{ maxWidth: '600px', appearance: 'auto' }}>
+              <option>rds-ca-rsa2048-g1 (기본값)</option>
+            </select>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>만료: May 26, 2061</p>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>인증 기관을 선택하지 않으면 RDS에서 대신 인증 기관을 선택합니다.</p>
           </div>
         </div>
 
@@ -414,7 +476,7 @@ function RDSList({ databases, questState, onCreate, onSelectDb }) {
         ) : databases.map((db, i) => (
           <div key={i} style={{ display: 'grid', gridTemplateColumns: '32px 2fr 1fr 1fr 1fr 1fr 1fr 1fr', padding: '12px 16px', borderBottom: '1px solid var(--border-light)', alignItems: 'center', cursor: 'pointer' }}
             onClick={() => onSelectDb(db)}>
-            <input type="radio" readOnly style={{ cursor: 'pointer' }} />
+            <input type="radio" readOnly style={{ cursor: 'pointer', pointerEvents: 'none' }} />
             <a className="aws-info-link" style={{ fontWeight: 600, fontSize: '14px' }}>{db.name}</a>
             <span><span style={{ background: '#1d8102', color: '#fff', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>✅ 사용 가능</span></span>
             <span style={{ fontSize: '13px' }}>인스턴스</span>

@@ -29,10 +29,14 @@ export default function S3CreateForm({ questState, onCreated, onBack }) {
   const handleCreate = (e) => {
     e.preventDefault();
     if (!bucketName) return;
-    if (!allPublicBlocked && !acknowledged) return; // 퍼블릭 해제 시 acknowledgement 필수
+    if (!allPublicBlocked && !acknowledged) return;
 
-    if (isS3Step && !allPublicBlocked) {
-      questState.completeCurrentStep();
+    if (isS3Step) {
+      if (!allPublicBlocked) {
+        questState.completeCurrentStep();
+      } else {
+        questState.triggerMistake?.('s3_public_blocked');
+      }
     }
     onCreated({ name: bucketName, type: bucketType, public: !allPublicBlocked });
   };

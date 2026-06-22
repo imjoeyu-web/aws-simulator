@@ -41,7 +41,14 @@ function InboundRuleEditor({ questState, onSaved, onCancel }) {
   };
 
   const handleSave = () => {
-    if (sgInfo.active) questState.completeCurrentStep?.();
+    if (sgInfo.active) {
+      const portMatches = String(newRule.port) === String(sgInfo.port);
+      if (portMatches) {
+        questState.completeCurrentStep?.();
+      } else {
+        questState.triggerMistake?.('ec2_wrong_port');
+      }
+    }
     onSaved([...existingRules, { ...newRule, id: 2 }]);
   };
 

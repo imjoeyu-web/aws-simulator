@@ -68,6 +68,8 @@ function App() {
   const [mistakeToast, setMistakeToast] = useState(null);
   const prevCompletedLenRef = useRef(0);
 
+  const [selectedRegion, setSelectedRegion] = useState('us-east-1');
+
   const [cloud9View, setCloud9View] = useState('landing');
   const [cloud9Env, setCloud9Env] = useState(null);
   const [s3View, setS3View] = useState('list');
@@ -122,6 +124,7 @@ function App() {
     setIntroTutorialId(null);
     setSelectedTutorialId(tutorialId);
     setCurrentService('console-home');
+    setSelectedRegion('us-east-1');
     setCloud9View('landing');
     setCloud9Env(null);
     setS3View('list');
@@ -141,6 +144,9 @@ function App() {
         currentService={currentService}
         onServiceSelect={setCurrentService}
         questState={questState}
+        selectedRegion={selectedRegion}
+        setSelectedRegion={setSelectedRegion}
+        locked={introTutorialId !== null || isHome}
       />
 
       <div className="main-content">
@@ -183,18 +189,18 @@ function App() {
             </GameScreen>
           )}
 
-          {/* 콘솔 화면 — 일반 스크롤 */}
-          {currentService === 'console-home' && (
+          {/* 콘솔 화면 — 인트로 모달이 열려있는 동안은 렌더링 차단 */}
+          {introTutorialId === null && currentService === 'console-home' && (
             <ConsoleHome tutorial={currentTutorial} questState={questState} onNavigate={setCurrentService} />
           )}
-          {currentService === 'cloud9' && (
+          {introTutorialId === null && currentService === 'cloud9' && (
             <Cloud9Console
               questState={questState} onNavigate={setCurrentService}
               view={cloud9View} setView={setCloud9View}
               createdEnv={cloud9Env} setCreatedEnv={setCloud9Env}
             />
           )}
-          {currentService === 's3' && (
+          {introTutorialId === null && currentService === 's3' && (
             <S3Console
               questState={questState}
               view={s3View} setView={setS3View}
@@ -202,16 +208,16 @@ function App() {
               activeBucket={s3ActiveBucket} setActiveBucket={setS3ActiveBucket}
             />
           )}
-          {currentService === 'rds' && (
+          {introTutorialId === null && currentService === 'rds' && (
             <RDSConsole questState={questState} onNavigate={setCurrentService} />
           )}
-          {currentService === 'ec2' && (
+          {introTutorialId === null && currentService === 'ec2' && (
             <EC2Console questState={questState} onNavigate={setCurrentService} />
           )}
-          {currentService === 'lambda' && (
+          {introTutorialId === null && currentService === 'lambda' && (
             <LambdaConsole questState={questState} />
           )}
-          {currentService === 'terminal' && (
+          {introTutorialId === null && currentService === 'terminal' && (
             <VirtualTerminal questState={questState} onNavigate={setCurrentService} s3Buckets={s3Buckets} />
           )}
         </main>

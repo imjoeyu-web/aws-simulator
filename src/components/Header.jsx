@@ -54,10 +54,15 @@ function getRegionDisplay(code) {
   return code;
 }
 
-export default function Header({ currentService, onServiceSelect, questState }) {
+function hasBatchim(word) {
+  const code = word.charCodeAt(word.length - 1);
+  if (code < 0xAC00 || code > 0xD7A3) return false;
+  return (code - 0xAC00) % 28 !== 0;
+}
+
+export default function Header({ currentService, onServiceSelect, questState, selectedRegion, setSelectedRegion, locked = false }) {
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState('us-east-1');
   const [regionOpen, setRegionOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -80,16 +85,21 @@ export default function Header({ currentService, onServiceSelect, questState }) 
     setRegionOpen(false);
 
     const isSeoul = code === 'ap-northeast-2';
-
-    // 리전 설정 스텝 완료 → 서울이든 아니든 완료됨
     const regionStep = questState?.steps?.find(s => s.id?.includes('region'));
-    if (regionStep && !questState?.completedSteps?.includes(regionStep.id)) {
-      questState.completeStep?.(regionStep.id);
-    }
+    const alreadyDone = questState?.completedSteps?.includes(regionStep?.id);
 
-    // 서울 아닌 리전 선택 시 페널티
-    if (!isSeoul) {
-      questState.triggerMistake?.('wrong_region');
+    if (isSeoul) {
+      if (regionStep && !alreadyDone) questState.completeStep?.(regionStep.id);
+    } else {
+      let regionName = code;
+      for (const g of REGIONS) {
+        const item = g.items.find(i => i.code === code);
+        if (item) { regionName = item.name; break; }
+      }
+      const copula = hasBatchim(regionName) ? '이었어' : '였어';
+      questState.triggerMistake?.('wrong_region', {
+        message: `서울인 줄 알았는데 ${regionName}${copula}... 리전마다 요금이 달라요 😅`,
+      });
     }
   };
 
@@ -165,14 +175,14 @@ export default function Header({ currentService, onServiceSelect, questState }) 
         {/* 리전 드롭다운 */}
         <div ref={dropdownRef} style={{ position: 'relative' }}>
           <button
-            onClick={() => setRegionOpen(v => !v)}
+            onClick={() => !locked && setRegionOpen(v => !v)}
             style={{
-              background: 'transparent', color: '#ffffff',
-              fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
-              border: isRegionStep ? '2px solid #ff9900' : 'none',
-              padding: isRegionStep ? '3px 8px' : '4px 0',
-              borderRadius: isRegionStep ? '6px' : '0',
-              animation: isRegionStep ? 'region-pulse 1.5s ease-in-out infinite' : 'none',
+              background: 'transparent', color: locked ? '#888' : '#ffffff',
+              fontSize: '13px', cursor: locked ? 'default' : 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
+              border: !locked && isRegionStep ? '2px solid #ff9900' : 'none',
+              padding: !locked && isRegionStep ? '3px 8px' : '4px 0',
+              borderRadius: !locked && isRegionStep ? '6px' : '0',
+              animation: !locked && isRegionStep ? 'region-pulse 1.5s ease-in-out infinite' : 'none',
             }}
           >
             {getRegionDisplay(selectedRegion)}

@@ -1,10 +1,7 @@
 import { useRef, useState, useLayoutEffect } from 'react';
 import SajangCharacter from './SajangCharacter';
 
-const STEP_COSTS = {
-  header: 0.001, cloud9: 0.10, terminal: 0.004,
-  s3: 0.023, ec2: 0.52, rds: 1.75, lambda: 0.0002,
-};
+const INITIAL_CREDITS = 100;
 
 const REWARDS = {
   1: { badge: '🏅', title: '정적 호스팅 마스터', desc: '만두 메뉴판을 전 세계에 공개했어요!' },
@@ -12,11 +9,11 @@ const REWARDS = {
   3: { badge: '⚡', title: '서버리스 개척자', desc: 'AI 직원 채용 완료. 인건비 0원 달성!' },
 };
 
-const COST_GRADE = [
-  { max: 1,        emoji: '🥇', label: '절약왕' },
-  { max: 5,        emoji: '👍', label: '검소한 개발자' },
-  { max: 15,       emoji: '😅', label: '뭐 이 정도는...' },
-  { max: Infinity, emoji: '💸', label: '통장 탈탈' },
+const CREDIT_GRADE = [
+  { min: 80, emoji: '🥇', label: '절약왕' },
+  { min: 60, emoji: '👍', label: '검소한 개발자' },
+  { min: 40, emoji: '😅', label: '뭐 이 정도는...' },
+  { min: 0,  emoji: '💸', label: '통장 탈탈' },
 ];
 
 // 별 아이콘 (SVG) — 가운데 130px, 사이드 100px
@@ -57,14 +54,11 @@ function Star({ filled, delay = 0, big = false }) {
 }
 
 export default function StageClearModal({ tutorial, steps, completedSteps, credits = 0, onNext, onBack, nextTutorial }) {
-  const totalCost = completedSteps.reduce((sum, stepId) => {
-    const step = steps.find(s => s.id === stepId);
-    return sum + (STEP_COSTS[step?.service] ?? 0.05);
-  }, 0);
+  const spent = INITIAL_CREDITS - credits;
 
-  const starCount = credits >= 80 ? 3 : credits >= 50 ? 2 : 1;
+  const starCount = credits >= 80 ? 3 : credits >= 60 ? 2 : 1;
   const reward = REWARDS[tutorial?.id] ?? REWARDS[1];
-  const grade = COST_GRADE.find(g => totalCost < g.max);
+  const grade = CREDIT_GRADE.find(g => credits >= g.min);
   const accent = tutorial?.color ?? '#ff9900';
 
   // 별 + 카드 전체를 감싸는 래퍼 기준으로 scale 계산
@@ -175,7 +169,7 @@ export default function StageClearModal({ tutorial, steps, completedSteps, credi
             <div style={{ display: 'flex', gap: '14px', marginBottom: '26px' }}>
               <div style={{ flex: 1, background: '#fff', border: '3px solid #f0d9b0', borderRadius: '16px', padding: '16px' }}>
                 <div style={{ fontSize: '14px', color: '#999', fontWeight: 800, marginBottom: '6px' }}>💰 총 AWS 청구액</div>
-                <div style={{ fontSize: '30px', fontWeight: 900, color: '#ef4444', fontFamily: 'monospace' }}>${totalCost.toFixed(2)}</div>
+                <div style={{ fontSize: '30px', fontWeight: 900, color: '#ef4444', fontFamily: 'monospace' }}>${spent}</div>
               </div>
               <div style={{ flex: 1, background: '#fff', border: '3px solid #f0d9b0', borderRadius: '16px', padding: '16px' }}>
                 <div style={{ fontSize: '14px', color: '#999', fontWeight: 800, marginBottom: '6px' }}>🏆 평가</div>

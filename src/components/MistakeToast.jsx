@@ -6,7 +6,7 @@ export default function MistakeToast({ event }) {
   return (
     <div style={{
       position: 'fixed',
-      top: '28px',
+      bottom: '28px',
       right: '28px',
       zIndex: 500,
       display: 'flex',

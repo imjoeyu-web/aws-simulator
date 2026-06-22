@@ -17,7 +17,13 @@ function LambdaCreateForm({ questState, onCreated, onBack }) {
   const handleCreate = (e) => {
     e.preventDefault();
     if (!fnName) return;
-    if (isCreateStep) questState.completeCurrentStep?.();
+    if (isCreateStep) {
+      if (runtime.toLowerCase().includes('node')) {
+        questState.completeCurrentStep?.();
+      } else {
+        questState.triggerMistake?.('lambda_wrong_runtime');
+      }
+    }
     onCreated({ name: fnName, runtime, arn: `arn:aws:lambda:ap-northeast-2:123456789012:function:${fnName}` });
   };
 
@@ -165,21 +171,40 @@ function LambdaDetail({ fn, questState, onBack }) {
   const handleSaveUrl = () => {
     setHasUrl(true);
     setShowUrlCreate(false);
-    if (isUrlStep) questState.completeCurrentStep?.();
+    if (isUrlStep) {
+      if (urlAuth === 'NONE') {
+        questState.completeCurrentStep?.();
+      } else {
+        questState.triggerMistake?.('lambda_wrong_auth');
+      }
+    }
   };
 
   const handleSaveEnv = () => {
     const filled = newEnvRows.filter(r => r.key && r.value);
     setEnvVars(filled);
     setEditingEnv(false);
-    if (isEnvStep && filled.length >= 4) questState.completeCurrentStep?.();
+    if (isEnvStep) {
+      if (filled.length >= 4) {
+        questState.completeCurrentStep?.();
+      } else {
+        questState.triggerMistake?.('lambda_env_incomplete');
+      }
+    }
   };
 
   const handleSaveTimeout = () => {
     setEditingTimeout(false);
     const mins = parseInt(timeout.min) || 0;
     const secs = parseInt(timeout.sec) || 0;
-    if (isTimeoutStep && (mins >= 1 || secs >= 30)) questState.completeCurrentStep?.();
+    const totalSecs = mins * 60 + secs;
+    if (isTimeoutStep) {
+      if (totalSecs >= 30) {
+        questState.completeCurrentStep?.();
+      } else {
+        questState.triggerMistake?.('lambda_short_timeout');
+      }
+    }
   };
 
   const CONFIG_TABS = ['일반 구성', '권한', '환경 변수', 'VPC', '태그', '동시성', '모니터링 및 운영 도구', '함수 URL', '코드 서명'];

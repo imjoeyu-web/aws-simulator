@@ -2,6 +2,30 @@ import { useState } from 'react';
 import { CheckCircle2, Circle, ChevronRight } from 'lucide-react';
 import SajangCharacter from './SajangCharacter';
 
+function getStepSection(id) {
+  if (/region|c9_create|c9_open|c9_ide|clone/.test(id))       return '🔧 작업환경 구축';
+  if (/rds_create|sg_rds|mysql|create_db/.test(id))           return '🗄️ 데이터베이스 (RDS)';
+  if (/cd_server|npm_install_server|env_server|node_server|sg_ec2|env_files|server_run/.test(id)) return '⚙️ 서버 (EC2)';
+  if (/lambda/.test(id))                                       return '🤖 Lambda (AI)';
+  if (/cd_client|t\d+_cd$|npm_install|npm_build|s3_/.test(id)) return '💻 클라이언트 (S3)';
+  return null;
+}
+
+function SectionDivider({ label }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '16px 0 6px' }}>
+      <div style={{ flex: 1, height: '1px', background: '#d0d8e4' }} />
+      <span style={{
+        fontSize: '12px', fontWeight: 800, color: '#4a6080',
+        letterSpacing: '0.3px', whiteSpace: 'nowrap', userSelect: 'none',
+      }}>
+        {label}
+      </span>
+      <div style={{ flex: 1, height: '1px', background: '#d0d8e4' }} />
+    </div>
+  );
+}
+
 function CopyableTemplate({ text }) {
   const [copied, setCopied] = useState(false);
   const handleCopy = () => {
@@ -161,83 +185,90 @@ export default function MissionSidebar({ steps, currentStepIndex, completedSteps
 
       {/* ── 스텝 목록 ── */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px', minHeight: 0 }}>
-        {steps.map((step, index) => {
-          const isCompleted = completedSteps.includes(step.id);
-          const isCurrent = index === currentStepIndex;
-          const isFuture = !isCompleted && !isCurrent;
+        {(() => {
+          let lastSection = null;
+          return steps.map((step, index) => {
+            const isCompleted = completedSteps.includes(step.id);
+            const isCurrent = index === currentStepIndex;
+            const isFuture = !isCompleted && !isCurrent;
+            const section = getStepSection(step.id);
+            const showDivider = section && section !== lastSection;
+            if (showDivider) lastSection = section;
 
-          return (
-            <div
-              key={step.id}
-              className={isFuture ? 'step-future' : isCurrent ? 'step-current' : ''}
-              style={{
-                display: 'flex',
-                gap: '12px',
-                padding: '16px 12px',
-                borderRadius: '4px',
-                background: isCurrent ? '#ffffff' : 'transparent',
-                border: isCurrent ? '1px solid var(--aws-orange)' : '1px solid transparent',
-                marginBottom: '4px',
-                transition: 'all 0.2s ease',
-                boxShadow: isCurrent ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
-                position: 'relative',
-              }}
-            >
-              <div style={{ marginTop: '2px' }}>
-                {isCompleted ? (
-                  <CheckCircle2 size={18} color="#1d8102" />
-                ) : (
-                  <Circle size={18} color={isCurrent ? 'var(--aws-orange)' : '#aab7b8'} />
-                )}
-              </div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{
-                  fontSize: '13px',
-                  fontWeight: isCurrent ? 700 : 500,
-                  color: isCurrent ? 'var(--aws-orange)' : (isCompleted ? '#16191f' : '#545b64'),
-                }}>
-                  {step.title}
-                </h3>
-                {(isCurrent || isCompleted) && (
-                  <p style={{ fontSize: '12px', color: '#545b64', marginTop: '6px', lineHeight: 1.4 }}>
-                    {step.description}
-                  </p>
-                )}
-                {isCurrent && step.template && (
-                  <CopyableTemplate text={step.template} />
-                )}
-
-                {isCurrent && step.why && (
-                  <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed #f0d9b5' }}>
-                    <div style={{
-                      fontSize: '11px', fontWeight: 700, letterSpacing: '0.4px',
-                      textTransform: 'uppercase', color: '#c45000', marginBottom: '5px',
+            return (
+              <div key={step.id}>
+                {showDivider && <SectionDivider label={section} />}
+                <div
+                  className={isFuture ? 'step-future' : isCurrent ? 'step-current' : ''}
+                  style={{
+                    display: 'flex',
+                    gap: '12px',
+                    padding: '16px 12px',
+                    borderRadius: '4px',
+                    background: isCurrent ? '#ffffff' : 'transparent',
+                    border: isCurrent ? '1px solid var(--aws-orange)' : '1px solid transparent',
+                    marginBottom: '4px',
+                    transition: 'all 0.2s ease',
+                    boxShadow: isCurrent ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
+                    position: 'relative',
+                  }}
+                >
+                  <div style={{ marginTop: '2px' }}>
+                    {isCompleted ? (
+                      <CheckCircle2 size={18} color="#1d8102" />
+                    ) : (
+                      <Circle size={18} color={isCurrent ? 'var(--aws-orange)' : '#aab7b8'} />
+                    )}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{
+                      fontSize: '13px',
+                      fontWeight: isCurrent ? 700 : 500,
+                      color: isCurrent ? 'var(--aws-orange)' : (isCompleted ? '#16191f' : '#545b64'),
                     }}>
-                      💡 왜 이 단계인가요?
-                    </div>
-                    <p style={{ fontSize: '12px', color: '#545b64', lineHeight: 1.55, margin: 0 }}>
-                      {step.why}
-                    </p>
-                    {step.concept && (
-                      <div style={{
-                        marginTop: '8px', background: '#fdf6ec',
-                        border: '1px solid #f0d9b5', borderRadius: '3px',
-                        padding: '7px 10px', fontSize: '11.5px', color: '#16191f', lineHeight: 1.5,
-                      }}>
-                        🔑 <strong>핵심 개념:</strong> {step.concept}
+                      {step.title}
+                    </h3>
+                    {(isCurrent || isCompleted) && (
+                      <p style={{ fontSize: '12px', color: '#545b64', marginTop: '6px', lineHeight: 1.4 }}>
+                        {step.description}
+                      </p>
+                    )}
+                    {isCurrent && step.template && (
+                      <CopyableTemplate text={step.template} />
+                    )}
+                    {isCurrent && step.why && (
+                      <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed #f0d9b5' }}>
+                        <div style={{
+                          fontSize: '11px', fontWeight: 700, letterSpacing: '0.4px',
+                          textTransform: 'uppercase', color: '#c45000', marginBottom: '5px',
+                        }}>
+                          💡 왜 이 단계인가요?
+                        </div>
+                        <p style={{ fontSize: '12px', color: '#545b64', lineHeight: 1.55, margin: 0 }}>
+                          {step.why}
+                        </p>
+                        {step.concept && (
+                          <div style={{
+                            marginTop: '8px', background: '#fdf6ec',
+                            border: '1px solid #f0d9b5', borderRadius: '3px',
+                            padding: '7px 10px', fontSize: '11.5px', color: '#16191f', lineHeight: 1.5,
+                          }}>
+                            🔑 <strong>핵심 개념:</strong> {step.concept}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-                )}
-              </div>
-              {isCurrent && (
-                <div style={{ position: 'absolute', right: '12px', top: '16px' }}>
-                  <ChevronRight size={16} color="var(--aws-orange)" />
+                  {isCurrent && (
+                    <div style={{ position: 'absolute', right: '12px', top: '16px' }}>
+                      <ChevronRight size={16} color="var(--aws-orange)" />
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          );
-        })}
+              </div>
+            );
+          });
+        })()}
       </div>
     </div>
   );

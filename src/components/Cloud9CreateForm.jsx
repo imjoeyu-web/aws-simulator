@@ -12,11 +12,13 @@ export default function Cloud9CreateForm({ questState, onNavigate, onEnvCreated,
   const handleCreate = (e) => {
     e.preventDefault();
     if (!envName) return;
-    // 퀘스트 완료 처리
     if (isCreateStep) {
-      questState.completeCurrentStep();
+      if (instanceType === 't3.small') {
+        questState.completeCurrentStep();
+      } else {
+        questState.triggerMistake?.('cloud9_wrong_instance');
+      }
     }
-    // 환경 목록 화면으로 이동 (onEnvCreated 콜백)
     onEnvCreated({ name: envName, type: instanceType });
   };
 

@@ -16,21 +16,30 @@ export const STEP_CREDIT_COSTS = {
 
 // 실수 이벤트 정의
 export const MISTAKE_EVENTS = {
-  api_key_exposed:   { label: '🚨 API 키가 GitHub에 노출됐어요!', penalty: 30, message: '해킹당했다...!!! 누군가 내 계정으로 서버를 막 만들고 있어요 😱' },
-  ec2_left_on:       { label: '⚠️ EC2를 끄지 않고 방치했어요!', penalty: 8,  message: '...뭔가 돈이 새고 있어. 쓰지 않는 서버는 꺼야 해요 😟' },
-  security_group_open: { label: '⚠️ 보안그룹이 전체 공개됐어요!', penalty: 15, message: '누구나 내 서버에 들어올 수 있잖아?! 0.0.0.0/0은 위험해요 😰' },
-  wrong_region:      { label: '⚠️ 리전을 잘못 설정했어요!', penalty: 5,  message: '서울인 줄 알았는데 버지니아였어... 리전마다 요금이 달라요 😅' },
+  api_key_exposed:     { label: '🚨 API 키가 GitHub에 노출됐어요!',           penalty: 30, message: '해킹당했다...!!! 누군가 내 계정으로 서버를 막 만들고 있어요 😱' },
+  ec2_left_on:         { label: '⚠️ EC2를 끄지 않고 방치했어요!',             penalty: 8,  message: '...뭔가 돈이 새고 있어. 쓰지 않는 서버는 꺼야 해요 😟' },
+  security_group_open: { label: '⚠️ 보안그룹이 전체 공개됐어요!',             penalty: 15, message: '누구나 내 서버에 들어올 수 있잖아?! 0.0.0.0/0은 위험해요 😰' },
+  wrong_region:        { label: '⚠️ 리전을 잘못 설정했어요!',                 penalty: 5,  message: '서울인 줄 알았는데 버지니아였어... 리전마다 요금이 달라요 😅' },
+  s3_public_blocked:      { label: '🪣 퍼블릭 액세스가 차단된 채로 생성됐어요!',  penalty: 5,  message: '"모든 퍼블릭 액세스 차단" 체크를 해제해야 홈페이지가 외부에 열려요! 다시 만들어야 해요 😰' },
+  rds_wrong_engine:       { label: '🗄️ DB 엔진이 잘못됐어요!',                    penalty: 5,  message: '실습은 MySQL을 써야 해요! Aurora는 비용도 더 나오고 설정도 달라요 🤔' },
+  rds_not_free_tier:      { label: '💸 프리티어가 아닌 플랜을 선택했어요!',        penalty: 10, message: '이게 얼마짜리야?! 개발/실습엔 프리티어면 충분해요. 프로덕션 쓰면 요금 폭탄 맞아요 😱' },
+  rds_not_public:         { label: '🔒 RDS 퍼블릭 액세스가 꺼져 있어요!',         penalty: 5,  message: 'EC2 서버에서 DB에 연결을 못 해요! 퍼블릭 액세스를 "예"로 설정해야 외부 접속이 돼요 😟' },
+  cloud9_wrong_instance:  { label: '⚠️ 인스턴스 타입이 잘못됐어요!',              penalty: 5,  message: '실습은 t3.small이어야 해요! t2.micro는 메모리 부족으로 빌드 중 멈출 수 있어요 🤔' },
+  ec2_wrong_port:         { label: '⚠️ 포트 번호가 잘못됐어요!',                   penalty: 5,  message: '서비스가 기다리는 포트랑 달라요! 가이드에서 포트 번호를 다시 확인해줘요 😟' },
+  lambda_wrong_runtime:   { label: '⚠️ Lambda 런타임이 잘못됐어요!',              penalty: 5,  message: '실습 코드는 Node.js로 작성돼 있어요! 다른 런타임을 선택하면 코드가 실행 안 돼요 😰' },
+  lambda_env_incomplete:  { label: '⚠️ 환경변수가 모두 입력되지 않았어요!',        penalty: 3,  message: 'DB_HOST, DB_USER, DB_PASSWORD, DB_NAME은 필수예요! 빠진 항목을 채워줘요 😟' },
+  lambda_wrong_auth:      { label: '⚠️ Lambda URL 인증 방식이 잘못됐어요!',       penalty: 5,  message: 'AWS_IAM이면 클라이언트에서 서명 없이 못 접근해요! NONE으로 설정해야 공개 URL이 돼요 🤔' },
+  lambda_short_timeout:   { label: '⏱️ Lambda 제한 시간이 너무 짧아요!',          penalty: 5,  message: 'GPT API 응답은 30초 이상 걸릴 수 있어요! 너무 짧으면 함수가 중간에 끊겨요 😰' },
+  terminal_wrong_cmd:     { label: '❌ 지금 단계에서 필요한 명령어가 아니에요!',   penalty: 3,  message: '가이드를 다시 확인해봐요. 이 단계에서 실행해야 할 명령어가 달라요 😅' },
 };
 
-// 크레딧 → 감정 매핑
-export function getMoodFromCredits(credits, combo) {
-  if (combo <= -2) return 'worried';
-  if (combo >= 3 && credits >= 70) return 'ecstatic';
-  if (credits >= 75) return 'ecstatic';
-  if (credits >= 50) return 'happy';
-  if (credits >= 25) return 'determined';
-  if (credits >= 10) return 'worried';
-  return 'crisis';
+// 진행도 → 감정 매핑 (크레딧과 독립)
+// progressRatio: 0~1 (완료 스텝 / 전체 스텝)
+export function getMoodFromProgress(progressRatio) {
+  if (progressRatio < 0.15) return 'worried';    // 0~15%: 이게 맞나?
+  if (progressRatio < 0.40) return 'determined'; // 15~40%: 해보자고
+  if (progressRatio < 0.65) return 'happy';      // 40~65%: 오 되네?!
+  return 'ecstatic';                             // 65%+: 만두가게 살았다!!!
 }
 
 // ─── Tutorial 1: Resume 정적 호스팅 ───
@@ -482,13 +491,14 @@ export function useQuestState(tutorialId = 1) {
     setLastEvent(null);
   }, [steps]);
 
-  const triggerMistake = useCallback((mistakeKey) => {
+  const triggerMistake = useCallback((mistakeKey, overrides = {}) => {
     const event = MISTAKE_EVENTS[mistakeKey];
     if (!event) return;
+    const merged = { ...event, ...overrides };
     const newCombo = combo <= 0 ? combo - 1 : -1;
-    setCredits(prev => Math.max(0, prev - event.penalty));
+    setCredits(prev => Math.max(0, prev - merged.penalty));
     setCombo(newCombo);
-    setLastEvent({ type: 'mistake', message: event.message, delta: -event.penalty, label: event.label });
+    setLastEvent({ type: 'mistake', message: merged.message, delta: -merged.penalty, label: merged.label });
   }, [combo]);
 
   const reset = useCallback(() => {
@@ -499,7 +509,8 @@ export function useQuestState(tutorialId = 1) {
     setLastEvent(null);
   }, []);
 
-  const mood = getMoodFromCredits(credits, combo);
+  const progressRatio = steps.length > 0 ? completedSteps.length / steps.length : 0;
+  const mood = getMoodFromProgress(progressRatio);
 
   return {
     currentStepIndex,
